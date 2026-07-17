@@ -1,24 +1,1951 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Sociotype Attractors</title>
-<link href="https://api.fontshare.com/v2/css?f[]=satoshi@500,700&display=swap" rel="stylesheet">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#090e1b">
+<title>The Socion as Attractor Landscape</title>
+<link rel="preconnect" href="https://api.fontshare.com" crossorigin>
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
 <style>
-html, body { margin: 0; height: 100%; background: #0a0f1e; color: #c8d2e8; font-family: 'Satoshi', -apple-system, BlinkMacSystemFont, sans-serif; display: flex; align-items: center; justify-content: center; }
-main { text-align: center; padding: 2rem; }
-h1 { font-weight: 700; letter-spacing: 0.02em; color: #e8edf7; font-size: 1.6rem; margin: 0 0 0.6rem; }
-p { font-weight: 500; font-size: 0.95rem; color: #7f8db0; margin: 0; }
-a { color: #9fb0d4; text-decoration: none; }
-a:hover { text-decoration: underline; }
+/* ============================================================
+   TOKENS · strict 8px grid · cybernetic minimalism
+   ============================================================ */
+:root{
+  --bg:#090e1b;
+  --txt:#e8e8ed;
+  --dim:#9aa3b2;
+  --faint:#5d6474;
+  --line:rgba(232,232,237,.09);
+  --line-soft:rgba(232,232,237,.05);
+  --panel:rgba(14,15,22,.74);
+  --panel-solid:#111219;
+  --cyan:#5fd0ea;
+  --rose:#d4556a;
+  --amber:#e0ae54;
+  --teal:#46d4f2;
+  --qa:#5a8df2; --qb:#9d6cf2; --qg:#ef5566; --qd:#5ecb8b;
+  --r:10px;
+  --font:'Satoshi', Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden}
+body{
+  background:var(--bg); color:var(--txt);
+  font-family:var(--font); font-size:14px; line-height:1.5;
+  -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+}
+button{font-family:inherit;color:inherit;background:none;border:none;cursor:pointer}
+button:focus-visible,select:focus-visible,textarea:focus-visible,input:focus-visible{
+  outline:1px solid var(--cyan); outline-offset:2px; border-radius:6px}
+::selection{background:rgba(127,212,228,.25)}
+
+/* ============================================================
+   STAGE + LABELS
+   ============================================================ */
+#stage{position:fixed;inset:0}
+#stage canvas{display:block}
+#labels{position:fixed;inset:0;pointer-events:none;z-index:5;overflow:hidden}
+.lbl{
+  position:absolute;transform:translate(-50%,-100%);
+  pointer-events:auto;cursor:pointer;
+  display:flex;align-items:center;gap:8px;
+  padding:5px 13px 5px 10px;border-radius:999px;
+  font-size:17px;font-weight:500;letter-spacing:.05em;
+  color:rgba(232,232,237,.82);
+  background:rgba(9,14,27,.45);
+  border:1px solid transparent;
+  backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
+  transition:border-color .25s,color .25s,background .25s;
+  user-select:none;white-space:nowrap;
+}
+.lbl .dot{width:10px;height:10px;border-radius:50%;background:currentColor;opacity:.9}
+.lbl:hover{color:#fff;border-color:var(--line)}
+.lbl.sel{color:#fff;border-color:rgba(127,212,228,.55);background:rgba(17,24,30,.6)}
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+header{
+  position:fixed;top:0;left:0;right:0;z-index:20;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 24px 8px;
+  background:linear-gradient(180deg, rgba(9,14,27,.88) 0%, rgba(9,14,27,.55) 60%, transparent 100%);
+  pointer-events:none;
+}
+header>*{pointer-events:auto}
+.hd-title h1{font-size:17px;font-weight:700;letter-spacing:.015em}
+.hd-title p{font-size:11.5px;line-height:1.5;color:var(--dim);letter-spacing:.03em;margin-top:3px}
+.hd-actions{display:flex;align-items:center;gap:8px}
+.hbtn{
+  font-size:12px;font-weight:500;letter-spacing:.03em;color:var(--dim);
+  padding:7px 12px;border:1px solid var(--line);border-radius:8px;
+  background:rgba(255,255,255,.025);
+  transition:color .2s,border-color .2s,background .2s;
+}
+.hbtn:hover{color:var(--txt);background:rgba(255,255,255,.05)}
+.hbtn.on{color:var(--cyan);border-color:rgba(127,212,228,.45)}
+#cmpState{
+  display:inline-flex;align-items:center;white-space:nowrap;line-height:1;
+  font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);
+  padding:8px 13px;border-radius:999px;border:1px solid var(--line-soft);
+  margin-right:4px;transition:color .4s,border-color .4s;
+}
+#cmpState.gram{color:var(--cyan);border-color:rgba(127,212,228,.3)}
+
+/* ============================================================
+   PANELS
+   ============================================================ */
+.panel{
+  position:fixed;top:96px;bottom:56px;z-index:15;
+  width:288px;display:flex;flex-direction:column;
+  background:var(--panel);
+  border:1px solid var(--line);border-radius:14px;
+  backdrop-filter:blur(16px) saturate(1.15);-webkit-backdrop-filter:blur(16px) saturate(1.15);
+  overflow:hidden;
+}
+#panelL{left:24px}
+#panelR{right:24px;width:300px}
+.p-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 16px 10px;border-bottom:1px solid var(--line-soft);flex:0 0 auto;
+}
+.p-head h2{font-size:10.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
+.fold{width:22px;height:22px;border-radius:6px;color:var(--faint);font-size:13px;line-height:1;
+  display:flex;align-items:center;justify-content:center;transition:color .2s,background .2s}
+.fold:hover{color:var(--txt);background:rgba(255,255,255,.05)}
+.p-body{padding:8px 16px 16px;overflow-y:auto;flex:1 1 auto;scrollbar-width:thin;scrollbar-color:rgba(232,232,237,.14) transparent}
+.p-body::-webkit-scrollbar{width:5px}
+.p-body::-webkit-scrollbar-thumb{background:rgba(232,232,237,.14);border-radius:99px}
+.panel.folded .p-body{display:none}
+.panel.folded{bottom:auto}
+.sec{font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin:18px 0 8px}
+.sec:first-child{margin-top:8px}
+
+/* ---- grammar toggle rows ---- */
+.grow{display:flex;align-items:flex-start;gap:12px;padding:9px 0;border-bottom:1px solid var(--line-soft)}
+.grow:last-of-type{border-bottom:none}
+.grow .gtxt{flex:1 1 auto;min-width:0}
+.grow .gname{font-size:13px;font-weight:500;display:flex;align-items:baseline;gap:8px}
+.grow .gkey{font-size:9.5px;color:var(--faint);letter-spacing:.1em}
+.grow .gdesc{font-size:11px;line-height:1.5;color:var(--dim);margin-top:2px}
+.tgl{
+  position:relative;flex:0 0 auto;width:30px;height:17px;margin-top:2px;
+  border-radius:999px;border:1px solid var(--line);
+  background:rgba(255,255,255,.04);transition:background .25s,border-color .25s;
+}
+.tgl::after{
+  content:"";position:absolute;top:2px;left:2px;width:11px;height:11px;border-radius:50%;
+  background:var(--dim);transition:transform .25s,background .25s;
+}
+.tgl[aria-checked="true"]{background:rgba(127,212,228,.16);border-color:rgba(127,212,228,.5)}
+.tgl[aria-checked="true"]::after{transform:translateX(13px);background:var(--cyan)}
+
+/* ---- quadra + segmented ---- */
+.segrow{display:flex;gap:6px}
+.qbtn,.dbtn{
+  flex:1;font-size:12px;font-weight:500;padding:7px 0;border-radius:8px;
+  border:1px solid var(--line);color:var(--dim);background:rgba(255,255,255,.02);
+  transition:color .2s,border-color .2s,background .2s;letter-spacing:.02em;
+}
+.qbtn:hover,.dbtn:hover{color:var(--txt)}
+.qbtn.on{color:#0c0d12;font-weight:700}
+.qbtn.on[data-q="0"]{background:var(--qa);border-color:var(--qa)}
+.qbtn.on[data-q="1"]{background:var(--qb);border-color:var(--qb)}
+.qbtn.on[data-q="2"]{background:var(--qg);border-color:var(--qg)}
+.qbtn.on[data-q="3"]{background:var(--qd);border-color:var(--qd)}
+.qbtn.on[data-q="-1"]{background:rgba(232,232,237,.85);border-color:transparent}
+.dbtn.on{color:var(--cyan);border-color:rgba(127,212,228,.5);background:rgba(127,212,228,.08)}
+.caption{font-size:11px;line-height:1.55;color:var(--dim);margin-top:8px;min-height:34px}
+
+/* ---- team ---- */
+#chips{display:flex;flex-wrap:wrap;gap:6px;min-height:26px}
+.chip{
+  display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:500;
+  padding:4px 8px;border-radius:999px;border:1px solid var(--line);color:var(--txt);
+  background:rgba(255,255,255,.03);
+}
+.chip .cdot{width:6px;height:6px;border-radius:50%}
+.chip button{color:var(--faint);font-size:12px;line-height:1;padding:0 0 0 2px}
+.chip button:hover{color:var(--rose)}
+.hint{font-size:11px;color:var(--faint);line-height:1.5}
+#pairs{margin-top:10px;display:flex;flex-direction:column;gap:5px}
+.pair{display:flex;align-items:center;justify-content:space-between;font-size:11.5px;color:var(--dim)}
+.pair .pnm{font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.pair .prl{font-size:10.5px;letter-spacing:.05em}
+.prl.sup{color:var(--teal)} .prl.neu{color:var(--dim)} .prl.ten{color:var(--amber)} .prl.cst{color:var(--rose)}
+#coupling{margin-top:12px;padding-top:10px;border-top:1px solid var(--line-soft)}
+.cline{display:flex;justify-content:space-between;align-items:baseline;font-size:12px}
+.cline b{font-weight:700;font-variant-numeric:tabular-nums;font-size:14px}
+.cbar{height:3px;border-radius:99px;background:rgba(255,255,255,.06);margin-top:8px;overflow:hidden}
+.cbar i{display:block;height:100%;width:50%;border-radius:99px;background:var(--teal);transition:width .5s,background .5s}
+
+/* ---- sliders ---- */
+.srow{padding:8px 0}
+.srow .slab{display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:6px}
+.srow .slab span:last-child{color:var(--dim);font-variant-numeric:tabular-nums;font-size:12px}
+input[type=range]{
+  -webkit-appearance:none;appearance:none;width:100%;height:16px;background:transparent;cursor:pointer;
+}
+input[type=range]::-webkit-slider-runnable-track{height:2px;border-radius:99px;background:rgba(232,232,237,.16)}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:var(--txt);
+  margin-top:-5px;border:none;transition:background .2s, box-shadow .2s;
+}
+input[type=range]:hover::-webkit-slider-thumb{background:var(--cyan);box-shadow:0 0 8px rgba(127,212,228,.5)}
+input[type=range]::-moz-range-track{height:2px;border-radius:99px;background:rgba(232,232,237,.16)}
+input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:var(--txt);border:none}
+
+/* ---- profile ---- */
+select{
+  width:100%;font-family:inherit;font-size:12.5px;color:var(--txt);
+  padding:8px 10px;border-radius:8px;border:1px solid var(--line);
+  background:var(--panel-solid);appearance:none;cursor:pointer;
+}
+textarea{
+  width:100%;font-family:inherit;font-size:11.5px;line-height:1.5;color:var(--txt);
+  background:rgba(255,255,255,.025);border:1px solid var(--line);border-radius:8px;
+  padding:8px 10px;resize:vertical;min-height:52px;margin-top:8px;
+  transition:border-color .3s;
+}
+textarea::placeholder{color:var(--faint)}
+textarea.err{border-color:rgba(216,131,184,.7)}
+.mini{
+  width:100%;margin-top:8px;font-size:12px;font-weight:500;letter-spacing:.03em;
+  padding:8px 0;border:1px solid var(--line);border-radius:8px;color:var(--dim);
+  background:rgba(255,255,255,.025);transition:color .2s,border-color .2s;
+}
+.mini:hover{color:var(--txt);border-color:rgba(232,232,237,.2)}
+.btnrow{display:flex;gap:8px}
+.btnrow .mini{margin-top:8px}
+
+/* ---- readouts ---- */
+.stat{display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px;padding:5px 0}
+.stat span:first-child{color:var(--dim)}
+.stat b{font-weight:500;font-variant-numeric:tabular-nums;letter-spacing:.03em}
+
+/* ============================================================
+   FOOTER HINTS
+   ============================================================ */
+footer{
+  position:fixed;left:0;right:0;bottom:0;z-index:14;
+  display:flex;justify-content:center;padding:12px 24px 14px;pointer-events:none;
+  background:linear-gradient(0deg, rgba(9,14,27,.8), transparent);
+}
+footer p{font-size:11px;letter-spacing:.05em;color:var(--faint)}
+footer b{color:var(--dim);font-weight:500}
+
+/* ============================================================
+   ABOUT MODAL
+   ============================================================ */
+#about{
+  position:fixed;inset:0;z-index:40;display:none;align-items:center;justify-content:center;
+  background:rgba(6,6,10,.6);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+}
+#about.open{display:flex}
+.acard{
+  width:min(720px, calc(100vw - 48px));max-height:min(78vh, 640px);
+  display:flex;flex-direction:column;
+  background:rgba(15,16,23,.96);border:1px solid var(--line);border-radius:16px;overflow:hidden;
+}
+.ahead{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 0}
+.ahead h2{font-size:15px;font-weight:700;letter-spacing:.02em}
+.aclose{color:var(--faint);font-size:18px;width:28px;height:28px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center}
+.aclose:hover{color:var(--txt);background:rgba(255,255,255,.05)}
+.atabs{display:flex;gap:4px;padding:12px 20px;border-bottom:1px solid var(--line-soft)}
+.atab{font-size:12px;font-weight:500;letter-spacing:.04em;color:var(--dim);
+  padding:7px 12px;border-radius:8px;transition:color .2s,background .2s}
+.atab:hover{color:var(--txt)}
+.atab.on{color:var(--txt);background:rgba(255,255,255,.06)}
+.abody{padding:16px 22px 22px;overflow-y:auto;scrollbar-width:thin}
+.abody::-webkit-scrollbar{width:5px}
+.abody::-webkit-scrollbar-thumb{background:rgba(232,232,237,.14);border-radius:99px}
+.apane{display:none}
+.apane.on{display:block}
+.apane p{font-size:13px;line-height:1.7;color:rgba(232,232,237,.86);margin-bottom:12px}
+.apane h3{font-size:12.5px;font-weight:700;letter-spacing:.03em;margin:16px 0 6px;color:var(--txt)}
+.apane h3:first-child{margin-top:0}
+.grade{font-size:11px;letter-spacing:.28em;color:var(--cyan);opacity:.85;margin-left:6px;white-space:nowrap}
+.apane .src{font-size:11.5px;color:var(--faint);line-height:1.6}
+
+/* ============================================================
+   EXPORT OVERLAY
+   ============================================================ */
+#shot{
+  position:fixed;inset:0;z-index:45;display:none;align-items:center;justify-content:center;
+  background:rgba(4,6,12,.66);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+}
+#shot.open{display:flex}
+.scard{
+  width:min(680px,calc(100vw - 48px));max-height:84vh;display:flex;flex-direction:column;
+  background:rgba(13,17,28,.97);border:1px solid var(--line);border-radius:16px;overflow:hidden;
+}
+.shead{display:flex;align-items:center;justify-content:space-between;padding:14px 18px 8px}
+.shead h2{font-size:13.5px;font-weight:700;letter-spacing:.03em}
+.sbody{padding:2px 18px 0;overflow:auto}
+.sbody img{display:block;width:100%;border-radius:10px;border:1px solid var(--line)}
+.sbody textarea{margin-top:0;min-height:240px;font-size:11px}
+.sbody .mini{margin-top:8px}
+.shint{font-size:11.5px;color:var(--faint);line-height:1.5;padding:10px 18px 8px}
+.sactions{display:flex;justify-content:flex-end;gap:8px;padding:0 18px 16px}
+.sactions:empty{display:none}
+.saction{
+  min-width:128px;font-size:12px;font-weight:600;letter-spacing:.03em;
+  padding:8px 14px;border:1px solid var(--line);border-radius:8px;color:var(--dim);
+  background:rgba(255,255,255,.025);transition:color .2s,border-color .2s,background .2s;
+}
+.saction:hover{color:var(--txt);border-color:rgba(232,232,237,.24);background:rgba(255,255,255,.05)}
+.saction.primary{color:var(--cyan);border-color:rgba(127,212,228,.46);background:rgba(127,212,228,.07)}
+.saction.primary:hover{border-color:rgba(127,212,228,.72);background:rgba(127,212,228,.12)}
+@keyframes btnflash{0%{border-color:rgba(127,212,228,.85);color:var(--cyan)}100%{border-color:var(--line)}}
+.hbtn.flash{animation:btnflash .55s ease}
+
+/* ============================================================
+   VEIL
+   ============================================================ */
+#veil{
+  position:fixed;inset:0;z-index:60;background:var(--bg);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
+  transition:opacity .7s ease;
+}
+#veil.gone{opacity:0;pointer-events:none}
+#veil h1{font-size:15px;font-weight:700;letter-spacing:.06em}
+#veil p{font-size:11.5px;color:var(--faint);letter-spacing:.14em;text-transform:uppercase}
+.pulse{width:36px;height:36px;border-radius:50%;border:1px solid rgba(127,212,228,.5);
+  animation:pl 1.6s ease-out infinite}
+@keyframes pl{0%{transform:scale(.4);opacity:.9}100%{transform:scale(1.5);opacity:0}}
+
+/* ============================================================
+   RESPONSIVE + MOTION
+   ============================================================ */
+@media (max-width:900px){
+  #cmpState{display:none}
+}
+@media (max-width:1180px){
+  #panelL{width:256px}
+  #panelR{width:272px}
+}
+@media (max-width:960px){
+  .panel{top:100px;bottom:auto;max-height:46vh}
+  #panelR{top:auto;bottom:56px;max-height:44vh}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{transition-duration:.01ms !important;animation-duration:.01ms !important}
+}
 </style>
 </head>
 <body>
-<main>
-<h1>Sociotype Attractors</h1>
-<p>The socion as an attractor landscape in continuous trait space. In preparation.</p>
-<p style="margin-top: 1.2rem"><a href="https://cognitive-frontier.github.io">cognitive-frontier</a></p>
-</main>
+
+<div id="veil">
+  <div class="pulse"></div>
+  <h1>The Socion as Attractor Landscape</h1>
+  <p>Initializing field</p>
+</div>
+
+<div id="stage"></div>
+<div id="labels"></div>
+
+<header>
+  <div class="hd-title">
+    <h1>The Socion as Attractor Landscape</h1>
+    <p>Grammar-Constrained Basins in Continuous Trait Space<br>A First-Principles Visualization</p>
+  </div>
+  <div class="hd-actions">
+    <span id="cmpState" class="gram">Grammar-constrained</span>
+    <button id="btnShadow" class="hbtn on" aria-pressed="true" title="Toggle the low sun and marched terrain shadows">Shadows</button>
+    <button id="btnCompare" class="hbtn" aria-pressed="false" title="Toggle the bare continuum for comparison (C)">Compare</button>
+    <button id="btnPNG" class="hbtn" title="Export the current view as an image (E)">Image</button>
+    <button id="btnJSON" class="hbtn" title="Export the current configuration">Config</button>
+    <button id="btnAbout" class="hbtn" title="Premise, grammar layers, dynamics, data">About</button>
+  </div>
+</header>
+
+<aside id="panelL" class="panel" aria-label="Grammar controls">
+  <div class="p-head"><h2>Grammar</h2><button class="fold" aria-label="Collapse panel">&ndash;</button></div>
+  <div class="p-body">
+    <div class="grow">
+      <div class="gtxt">
+        <div class="gname">Core dichotomies <span class="gkey">1</span></div>
+        <div class="gdesc">Value walls between quadras, with E/I and club partitions nested inside.</div>
+      </div>
+      <button class="tgl" role="switch" aria-checked="true" data-layer="dich" aria-label="Core dichotomies"></button>
+    </div>
+    <div class="grow">
+      <div class="gtxt">
+        <div class="gname">Information axes <span class="gkey">2</span></div>
+        <div class="gdesc">Conflict massif at center, super-ego barriers, valley links inside each quadra.</div>
+      </div>
+      <button class="tgl" role="switch" aria-checked="true" data-layer="axes" aria-label="Information axes"></button>
+    </div>
+    <div class="grow">
+      <div class="gtxt">
+        <div class="gname">Model A precision <span class="gkey">3</span></div>
+        <div class="gdesc">Basins skew toward their valued axis and gain dimensional ledges.</div>
+      </div>
+      <button class="tgl" role="switch" aria-checked="true" data-layer="modelA" aria-label="Model A precision"></button>
+    </div>
+    <div class="grow">
+      <div class="gtxt">
+        <div class="gname">Hybrid elements <span class="gkey">4</span></div>
+        <div class="gdesc">Metastable passes open through walls where neighbors share an ego channel.</div>
+      </div>
+      <button class="tgl" role="switch" aria-checked="true" data-layer="hybrid" aria-label="Hybrid elements"></button>
+    </div>
+    <div class="grow">
+      <div class="gtxt">
+        <div class="gname">Higher structures <span class="gkey">5</span></div>
+        <div class="gdesc">Quadra circuits, duality phase coupling, conflictor avoidance fields.</div>
+      </div>
+      <button class="tgl" role="switch" aria-checked="true" data-layer="higher" aria-label="Higher structures"></button>
+    </div>
+
+    <div class="sec">Quadra emphasis</div>
+    <div class="segrow" id="qrow">
+      <button class="qbtn" data-q="0" aria-label="Highlight Alpha">&Alpha;</button>
+      <button class="qbtn" data-q="1" aria-label="Highlight Beta">&Beta;</button>
+      <button class="qbtn" data-q="2" aria-label="Highlight Gamma">&Gamma;</button>
+      <button class="qbtn" data-q="3" aria-label="Highlight Delta">&Delta;</button>
+      <button class="qbtn on" data-q="-1" aria-label="No highlight">Off</button>
+    </div>
+
+    <div class="sec">Team coupling</div>
+    <p class="hint">Tap a type label on the field to add it. Up to four.</p>
+    <div id="chips"></div>
+    <div id="pairs"></div>
+    <div id="coupling" hidden>
+      <div class="cline"><span>Coordination cost</span><span><b id="cval">0.00</b>&nbsp; <span id="cqual" style="color:var(--dim);font-size:11px"></span></span></div>
+      <div class="cbar"><i id="cfill"></i></div>
+    </div>
+  </div>
+</aside>
+
+<aside id="panelR" class="panel" aria-label="Dynamics controls">
+  <div class="p-head"><h2>Dynamics</h2><button class="fold" aria-label="Collapse panel">&ndash;</button></div>
+  <div class="p-body">
+    <div class="srow">
+      <div class="slab"><span>Attractor strength</span><span id="vK">&times;1.00</span></div>
+      <input type="range" id="sK" min="0.2" max="2" step="0.05" value="1" aria-label="Attractor strength">
+    </div>
+    <div class="srow">
+      <div class="slab"><span>Variability</span><span id="vV">0.60</span></div>
+      <input type="range" id="sV" min="0" max="2" step="0.05" value="0.6" aria-label="Variability">
+    </div>
+    <div class="srow">
+      <div class="slab"><span>Baseline drift</span><span id="vD">0.15</span></div>
+      <input type="range" id="sD" min="0" max="1" step="0.05" value="0.15" aria-label="Baseline drift">
+    </div>
+    <div class="srow">
+      <div class="slab"><span>Stress &middot; context</span><span id="vS">0.15</span></div>
+      <input type="range" id="sS" min="0" max="1" step="0.05" value="0.15" aria-label="Stress and context load">
+    </div>
+
+    <div class="sec">Subtype field &middot; DCNH</div>
+    <div class="segrow" id="drow">
+      <button class="dbtn on" data-d="off">Off</button>
+      <button class="dbtn" data-d="D">D</button>
+      <button class="dbtn" data-d="C">C</button>
+      <button class="dbtn" data-d="N">N</button>
+      <button class="dbtn" data-d="H">H</button>
+    </div>
+    <p class="caption" id="dcap">No subtype accent. The swarm runs on type dynamics alone.</p>
+
+    <div class="sec">Profile</div>
+    <select id="presel" aria-label="Load an example similarity profile">
+      <option value="uniform">Uniform cohort</option>
+      <option value="ile">ILE-proximal profile (illustrative)</option>
+      <option value="bimodal">Bimodal &middot; ILE and LIE</option>
+      <option value="beta">Beta-skewed cohort</option>
+    </select>
+    <textarea id="ptext" rows="3" spellcheck="false"
+      placeholder="Sixteen similarities, 0 to 1, comma separated. Order: ILE SEI ESE LII EIE LSI SLE IEI SEE ILI LIE ESI LSE EII IEE SLI"></textarea>
+    <button class="mini" id="papply">Apply values</button>
+
+    <div class="sec">Field</div>
+    <div class="stat"><span>Surprise, swarm mean</span><b id="mF">0.00</b></div>
+    <div class="stat"><span>Basin transitions</span><b id="mT">0</b></div>
+    <div class="stat"><span>Grammar weight</span><b id="mW">1.00</b></div>
+
+    <div class="btnrow">
+      <button class="mini" id="bPulse">Pulse the swarm</button>
+      <button class="mini" id="bResetP">Reset swarm</button>
+    </div>
+    <button class="mini" id="bResetA">Reset everything</button>
+  </div>
+</aside>
+
+<footer>
+  <p><b>Drag</b> rotate &nbsp;&middot;&nbsp; <b>Scroll</b> zoom &nbsp;&middot;&nbsp; <b>Click field</b> perturb &nbsp;&middot;&nbsp; <b>Space</b> pulse &nbsp;&middot;&nbsp; <b>C</b> compare &nbsp;&middot;&nbsp; <b>R</b> reset view</p>
+</footer>
+
+<div id="about" role="dialog" aria-modal="true" aria-label="About this visualization">
+  <div class="acard">
+    <div class="ahead"><h2>The Socion as Attractor Landscape</h2><button class="aclose" id="aclose" aria-label="Close">&times;</button></div>
+    <div class="atabs">
+      <button class="atab on" data-t="0">Premise</button>
+      <button class="atab" data-t="1">Grammar</button>
+      <button class="atab" data-t="2">Dynamics</button>
+      <button class="atab" data-t="3">Data</button>
+    </div>
+    <div class="abody">
+      <div class="apane on">
+        <p>Measured personality is continuous. Trait scores, function profiles, and similarity vectors all arrive as graded quantities, and an honest model starts from that substrate.<span class="grade">&#9679;&#9679;&#9679;</span> The typological claim sits one level up: a grammar of constraints (dichotomy potentials, axis laws, precision weightings, intertype couplings) carves recurring low-energy regions into the continuum.</p>
+        <p>A sociotype, on this reading, is an attractor basin: a self-reinforcing configuration that a person's generative model keeps returning to because expected surprise is lowest there. Basins carry depth (stability), width (tolerance for perturbation), and shape (the pattern of convergence), which is why the same framework covers both the decade-scale stability of trait scores and the genuine transitions that follow crisis or sustained intervention.<span class="grade">&#9679;&#9679;&#9675;</span></p>
+        <p>The discrete reading works the way Bohr's orbitals work for chemistry: an idealization of a continuous substrate that stays the right tool at the scale where prediction happens. Trait distributions can remain bell-shaped while the configurations they parameterize settle into discrete wells; the landscape is continuous and the attractors are discrete. Toggle Compare and the grammar relaxes to a bare gradient field. That picture is still truthful, yet it says nothing about stability or about the lawful paths between basins, and that gap is where the constraint set earns its keep.</p>
+      </div>
+      <div class="apane">
+        <h3>Core dichotomies<span class="grade">&#9679;&#9679;&#9679;</span></h3>
+        <p>Jung-Augusta poles behave as potential differences: each pole pair sets a gradient the flow respects. The macro walls here realize Merry/Serious (west to east) and Judicious/Decisive (north to south), with Extravert/Introvert and club partitions nested inside each quadra. The plane itself is a projection of dichotomy space, so the walls are coordinates made visible.</p>
+        <h3>Information axes<span class="grade">&#9679;&#9679;&#9675;</span></h3>
+        <p>Complementary pairs (Ne&ndash;Si, Ni&ndash;Se, Ti&ndash;Fe, Te&ndash;Fi) bind quadra members into shared valleys, following the semiotic reading in which information circulates across the rational-irrational pairing and stalls within it. Contrary and conflicting element relations surface as the central massif and the super-ego barriers ringed around it; reaching a conflictor means paying the full crossing cost, which is why conflict pairs sit antipodal on this projection.</p>
+        <h3>Model A precision<span class="grade">&#9679;&#9679;&#9675;</span></h3>
+        <p>Precision-weighted elements skew each basin toward its valued axis, and dimensional structure appears as ledges: shallow shelves where lower-dimensional processing still holds before the well proper begins. This is the Presence Cube read as terrain.</p>
+        <h3>Hybrid elements<span class="grade">&#9679;&#9679;&#9675;</span></h3>
+        <p>Where two neighbors share an ego channel, a metastable saddle sits in the wall between them. Kindred pairs share the base element, lookalike pairs the creative; mirage and semi-dual pairs share an Integrated Element, the cross-order aspect and axis coordinates written N? through F!. Under stress the saddle's precision drops and the pass opens, so transitions route through shared machinery rather than across arbitrary walls.</p>
+        <h3>Higher structures<span class="grade">&#9679;&#9675;&#9675;</span></h3>
+        <p>Quadra circuits, duality phase coupling, and conflictor avoidance rendered as weak force fields over the swarm. Directionally motivated by intertype theory and the group structure beneath it; quantitatively heuristic.</p>
+      </div>
+      <div class="apane">
+        <p>Each particle is a person-level trajectory carrying the three PersDyn parameters (Sosnowska, Hofmans, and De Fruyt, 2019): baseline location, intra-individual variability, and attractor strength, the pull that returns deviations to baseline. The sliders map onto these directly.<span class="grade">&#9679;&#9679;&#9675;</span></p>
+        <p>Free energy reads as height. Basins are low-surprise regions, ridges are costly states, and the surprise index tracks the swarm's mean height above the field minimum. Stress raises noise while lowering barrier precision, so hybrid passes open and transition probability climbs.</p>
+        <p>Click the terrain to perturb locally. A settled particle spirals home; an over-perturbed one crosses a pass and re-settles elsewhere. That difference between return and transition is the practical payoff of drawing basins at all, since a bare trait field predicts neither.</p>
+      </div>
+      <div class="apane">
+        <p>Profile presets deform basin depths through a similarity vector over the sixteen types. The ILE-proximal preset is illustrative, shaped by ego-element overlap in the spirit of Talanov function-profile correlations rather than lifted from a specific dataset. Paste sixteen values between 0 and 1 in the listed order to ground the field in real scores.</p>
+        <p>The layout is a 2D projection chosen to preserve quadra adjacency and antipodal conflict. The full dichotomy space is higher-dimensional, so a few relations (semi-duality, benefit) read as longer paths than their true metric distance. DCNH acts as a field accent over the whole swarm, following the Gulenko energy-distribution reading of the four subtypes.<span class="grade">&#9679;&#9675;&#9675;</span></p>
+        <p class="src">Sources: the attractor-state derivation and landscape synthesis in the project papers; sociotype.xyz; socionavigator and the Talanov-Romanov corpus; wikisocion; varlawend on Model G; Vincent on information axes; Tencer's group-theoretic treatment; the Integrated Element lattice; bestsocionics on DCNH.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="shot" role="dialog" aria-modal="true" aria-label="Export">
+  <div class="scard">
+    <div class="shead"><h2 id="shotTitle">Snapshot</h2><button class="aclose" id="sclose" aria-label="Close">&times;</button></div>
+    <div class="sbody" id="shotBody"></div>
+    <p class="shint" id="shotHint"></p>
+    <div class="sactions" id="shotActions"></div>
+  </div>
+</div>
+
+<script src="assets/three.min.js"></script>
+<script>
+'use strict';
+/* ---- resilient boot: surface errors on the veil, guarantee Three.js ---- */
+(function () {
+  function fail(msg) {
+    var p = document.querySelector('#veil p'); if (p) p.textContent = msg;
+    var pl = document.querySelector('#veil .pulse'); if (pl) pl.style.display = 'none';
+    console.error(msg);
+  }
+  window.addEventListener('error', function (e) {
+    if (e && e.message) fail('Runtime error: ' + e.message);
+  });
+  var injected = false;
+  function ensure(tries) {
+    if (window.THREE) {
+      try { MAIN(); } catch (err) { fail('Initialization error: ' + err.message); console.error(err); }
+      return;
+    }
+    if (tries <= 0) { fail('Could not load Three.js from a CDN. Check network access, then reload.'); return; }
+    if (!injected && tries <= 26) {
+      injected = true;
+      var s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js';
+      document.head.appendChild(s);
+    }
+    setTimeout(function () { ensure(tries - 1); }, 150);
+  }
+  ensure(40);
+})();
+function MAIN() {
+/* ================================================================
+   0 · HELPERS
+   ================================================================ */
+const TAU = Math.PI * 2;
+const clamp = (v, a, b) => v < a ? a : (v > b ? b : v);
+const lerp = (a, b, t) => a + (b - a) * t;
+const sstep = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+const $ = id => document.getElementById(id);
+
+/* ================================================================
+   1 · TYPE DATA · positions, dichotomy bits, relations
+   The plane is a dichotomy projection:
+     x axis  Merry (west)    to Serious (east)
+     z axis  Judicious (north, -z) to Decisive (south, +z)
+     inside each quadra: Extravert (-x) / Introvert (+x),
+                         N-club (-z) / S-club (+z)
+   Conflict pairs land antipodal by construction.
+   ================================================================ */
+const QUADRAS = [
+  { sym: '\u0391', name: 'Alpha', col: '#5a8df2', cx: -4.6, cz: -4.6 },
+  { sym: '\u0392', name: 'Beta',  col: '#9d6cf2', cx: -4.6, cz:  4.6 },
+  { sym: '\u0393', name: 'Gamma', col: '#ef5566', cx:  4.6, cz:  4.6 },
+  { sym: '\u0394', name: 'Delta', col: '#5ecb8b', cx:  4.6, cz: -4.6 },
+];
+const TDEF = [
+  ['ILE', 0, 'Ne', 'Ti', 'Intuitive Logical Extravert'],
+  ['SEI', 0, 'Si', 'Fe', 'Sensing Ethical Introvert'],
+  ['ESE', 0, 'Fe', 'Si', 'Ethical Sensing Extravert'],
+  ['LII', 0, 'Ti', 'Ne', 'Logical Intuitive Introvert'],
+  ['EIE', 1, 'Fe', 'Ni', 'Ethical Intuitive Extravert'],
+  ['LSI', 1, 'Ti', 'Se', 'Logical Sensing Introvert'],
+  ['SLE', 1, 'Se', 'Ti', 'Sensing Logical Extravert'],
+  ['IEI', 1, 'Ni', 'Fe', 'Intuitive Ethical Introvert'],
+  ['SEE', 2, 'Se', 'Fi', 'Sensing Ethical Extravert'],
+  ['ILI', 2, 'Ni', 'Te', 'Intuitive Logical Introvert'],
+  ['LIE', 2, 'Te', 'Ni', 'Logical Intuitive Extravert'],
+  ['ESI', 2, 'Fi', 'Se', 'Ethical Sensing Introvert'],
+  ['LSE', 3, 'Te', 'Si', 'Logical Sensing Extravert'],
+  ['EII', 3, 'Fi', 'Ne', 'Ethical Intuitive Introvert'],
+  ['IEE', 3, 'Ne', 'Fi', 'Intuitive Ethical Extravert'],
+  ['SLI', 3, 'Si', 'Te', 'Sensing Logical Introvert'],
+];
+const flipLetter = e => ({ N: 'S', S: 'N', T: 'F', F: 'T' }[e[0]]) + e[1];
+const fullFlip   = e => ({ N: 'S', S: 'N', T: 'F', F: 'T' }[e[0]]) + (e[1] === 'e' ? 'i' : 'e');
+
+const TYPES = TDEF.map(([code, q, base, cre, name], i) => {
+  const E = base[1] === 'e' ? 1 : 0;
+  const P = (base[0] === 'N' || base[0] === 'S') ? 1 : 0;   // irrational
+  const N = (base[0] === 'N' || cre[0] === 'N') ? 1 : 0;    // N-club
+  const T = (base[0] === 'T' || cre[0] === 'T') ? 1 : 0;    // logical
+  const Q = QUADRAS[q];
+  return {
+    i, code, q, base, cre, name, E, N, T, P,
+    x: Q.cx + (E ? -1.7 : 1.7),
+    z: Q.cz + (N ? -1.7 : 1.7),
+    polr: flipLetter(cre),      // vulnerable element
+    mobil: fullFlip(cre),       // mobilizing element
+  };
+});
+
+/* XOR key over the Jungian basis (E, N-club, T, irrationality) */
+const XKEY = (a, b) => (a.E ^ b.E) | ((a.N ^ b.N) << 1) | ((a.T ^ b.T) << 2) | ((a.P ^ b.P) << 3);
+const RELS = {
+  0:  { n: 'Identity',       w: -0.60, v: 'sup' },
+  7:  { n: 'Duality',        w: -1.00, v: 'sup' },
+  14: { n: 'Activation',     w: -0.80, v: 'sup' },
+  9:  { n: 'Mirror',         w: -0.65, v: 'sup' },
+  4:  { n: 'Kindred',        w: -0.10, v: 'neu' },
+  2:  { n: 'Lookalike',      w: -0.10, v: 'neu' },
+  3:  { n: 'Semi-duality',   w: -0.30, v: 'neu' },
+  5:  { n: 'Mirage',         w: -0.25, v: 'neu' },
+  8:  { n: 'Quasi-identity', w:  0.35, v: 'ten' },
+  1:  { n: 'Extinguishment', w:  0.40, v: 'ten' },
+  6:  { n: 'Super-ego',      w:  0.60, v: 'ten' },
+  12: { n: 'Benefit',        w:  0.50, v: 'ten' },
+  10: { n: 'Benefit',        w:  0.50, v: 'ten' },
+  11: { n: 'Supervision',    w:  0.85, v: 'cst' },
+  13: { n: 'Supervision',    w:  0.85, v: 'cst' },
+  15: { n: 'Conflict',       w:  1.00, v: 'cst' },
+};
+function relLabel(a, b) {
+  const k = XKEY(a, b), r = RELS[k];
+  if (k === 11 || k === 13) {           // supervisor's base is supervisee's vulnerable
+    const s = (a.base === b.polr) ? a : b, t = (s === a) ? b : a;
+    return s.code + ' \u2192 ' + t.code + ' \u00b7 ' + r.n;
+  }
+  if (k === 12 || k === 10) {           // benefactor's mobilizing is beneficiary's base
+    const s = (a.mobil === b.base) ? a : b, t = (s === a) ? b : a;
+    return s.code + ' \u2192 ' + t.code + ' \u00b7 ' + r.n;
+  }
+  return a.code + ' \u2194 ' + b.code + ' \u00b7 ' + r.n;
+}
+TYPES.forEach(t => {
+  t.dual = TYPES.find(u => XKEY(t, u) === 7).i;
+  t.conf = TYPES.find(u => XKEY(t, u) === 15).i;
+});
+
+/* Integrated Element for a given aspect letter under a quadra's value axes
+   (lattice convention: N x Merry = N?, S x Merry = S!, T x Judicious = T?, F x Judicious = F!) */
+function ieOf(letter, q) {
+  const merry = (q === 0 || q === 1), jud = (q === 0 || q === 3);
+  if (letter === 'N') return merry ? 'N?' : 'N!';
+  if (letter === 'S') return merry ? 'S!' : 'S?';
+  if (letter === 'T') return jud ? 'T?' : 'T!';
+  return jud ? 'F!' : 'F?';
+}
+
+/* ================================================================
+   2 · STRUCTURAL SETS for the field
+   ================================================================ */
+const TUBES = [];   // within-quadra valley segments (duality, activation, mirror)
+const BUMPS = [];   // super-ego and extinguishment barriers near the massif
+const PASSES = [];  // hybrid saddles: kindred, lookalike (strong), semi-dual, mirage (faint)
+for (let i = 0; i < 16; i++) for (let j = i + 1; j < 16; j++) {
+  const a = TYPES[i], b = TYPES[j], k = XKEY(a, b);
+  if (a.q === b.q) {
+    const amp = k === 7 ? 0.58 : (k === 14 ? 0.42 : 0.36);
+    TUBES.push({ ax: a.x, az: a.z, dx: b.x - a.x, dz: b.z - a.z, amp });
+  }
+  if (k === 6)  BUMPS.push({ x: (a.x + b.x) / 2, z: (a.z + b.z) / 2, a: 0.42, s2: 2 * 1.05 * 1.05 });
+  if (k === 1)  BUMPS.push({ x: (a.x + b.x) / 2, z: (a.z + b.z) / 2, a: 0.40, s2: 2 * 0.90 * 0.90 });
+  if (k === 4 || k === 2 || k === 3 || k === 5) {
+    const strong = (k === 4 || k === 2);
+    const lab = k === 4 ? a.base : k === 2 ? a.cre
+      : (a.base[0] === b.base[0]) ? ieOf(a.base[0], a.q) : ieOf(a.cre[0], a.q);
+    PASSES.push({ x: (a.x + b.x) / 2, z: (a.z + b.z) / 2, amp: strong ? 0.55 : 0.34, i, j, lab, strong });
+  }
+}
+TUBES.forEach(t => { t.l2 = t.dx * t.dx + t.dz * t.dz; });
+
+/* ================================================================
+   3 · FIELD MATHEMATICS
+   One set of contributor functions feeds both the vertex grid and
+   live particle sampling, so terrain and physics always agree.
+   ================================================================ */
+function hsh(i, j) {
+  let n = (i * 374761393 + j * 668265263) | 0;
+  n = Math.imul(n ^ (n >>> 13), 1274126177);
+  return ((n ^ (n >>> 16)) >>> 0) / 4294967295;
+}
+function vn(x, z) {
+  const xi = Math.floor(x), zi = Math.floor(z), xf = x - xi, zf = z - zi;
+  const u = xf * xf * (3 - 2 * xf), v = zf * zf * (3 - 2 * zf);
+  const a = hsh(xi, zi), b = hsh(xi + 1, zi), c = hsh(xi, zi + 1), d = hsh(xi + 1, zi + 1);
+  return (a * (1 - u) + b * u) * (1 - v) + (c * (1 - u) + d * u) * v;
+}
+function fBase(x, z) {
+  return 0.55 * (vn(x * 0.14 + 3.1, z * 0.14 + 7.7) - 0.5)
+       + 0.26 * (vn(x * 0.33 + 13.7, z * 0.33 + 29.3) - 0.5)
+       + 0.0042 * (x * x + z * z);                       // containment rim
+}
+const IR1 = 1 / (2 * 0.62 * 0.62), IR2 = 1 / (2 * 0.50 * 0.50);
+function fRidge(x, z) {
+  let h = 0.95 * (Math.exp(-x * x * IR1) + Math.exp(-z * z * IR1));
+  const a = x - 4.6, b = x + 4.6, c = z - 4.6, d = z + 4.6;
+  h += 0.32 * (Math.exp(-a * a * IR2) + Math.exp(-b * b * IR2) + Math.exp(-c * c * IR2) + Math.exp(-d * d * IR2));
+  return h;
+}
+const ITB = 1 / (2 * 0.52 * 0.52);
+function fTube(x, z) {
+  let h = 0;
+  for (let n = 0; n < TUBES.length; n++) {
+    const t = TUBES[n];
+    let u = ((x - t.ax) * t.dx + (z - t.az) * t.dz) / t.l2;
+    u = u < 0 ? 0 : (u > 1 ? 1 : u);
+    const px = t.ax + t.dx * u - x, pz = t.az + t.dz * u - z, d2 = px * px + pz * pz;
+    if (d2 > 7) continue;
+    h -= t.amp * sstep(0, 0.12, u) * sstep(1, 0.88, u) * Math.exp(-d2 * ITB);
+  }
+  return h;
+}
+const ISUM = 1 / (2 * 1.75 * 1.75);
+function fBump(x, z) {
+  let h = 1.05 * Math.exp(-(x * x + z * z) * ISUM);      // central conflict massif
+  for (let n = 0; n < BUMPS.length; n++) {
+    const b = BUMPS[n], dx = x - b.x, dz = z - b.z, d2 = dx * dx + dz * dz;
+    if (d2 > 9) continue;
+    h += b.a * Math.exp(-d2 / b.s2);
+  }
+  return h;
+}
+const ITE = 1 / (2 * 0.30 * 0.30);
+function fTerr(x, z) {
+  let h = 0;
+  for (let i = 0; i < 16; i++) {
+    const t = TYPES[i], dx = x - t.x, dz = z - t.z;
+    const r = Math.sqrt(dx * dx + dz * dz) - 2.1;
+    if (r > 1.4 || r < -1.4) continue;
+    h += 0.15 * Math.exp(-r * r * ITE);
+  }
+  return h;
+}
+const ISD = 1 / (2 * 0.72 * 0.72);
+function fSad(x, z) {
+  let h = 0;
+  for (let n = 0; n < PASSES.length; n++) {
+    const p = PASSES[n], dx = x - p.x, dz = z - p.z, d2 = dx * dx + dz * dz;
+    if (d2 > 6) continue;
+    h -= p.amp * Math.exp(-d2 * ISD);
+  }
+  return h;
+}
+/* anisotropic basin kernels, elongated toward the dual (valued axis) */
+function mkKernel(i, sigma) {
+  const t = TYPES[i], d = TYPES[t.dual];
+  let ux = d.x - t.x, uz = d.z - t.z;
+  const L = Math.hypot(ux, uz); ux /= L; uz /= L;
+  const ip = 1 / (2 * Math.pow(sigma * 1.30, 2)), iq = 1 / (2 * Math.pow(sigma * 0.92, 2));
+  const cx = t.x, cz = t.z;
+  return (x, z) => {
+    const rx = x - cx, rz = z - cz;
+    const a = rx * ux + rz * uz, b = rz * ux - rx * uz;
+    const e = a * a * ip + b * b * iq;
+    return e > 14 ? 0 : -Math.exp(-e);
+  };
+}
+const KFs = [], KFb = [];
+for (let i = 0; i < 16; i++) { KFs.push(mkKernel(i, 1.18)); KFb.push(mkKernel(i, 2.05)); }
+
+/* ---- vertex grid: 125 x 125, cached per-layer for cheap recombination ---- */
+const SEG = 180, VS = SEG + 1, NV = VS * VS, SIZE = 24, HALF = 12;
+const GX = new Float32Array(NV), GZ = new Float32Array(NV);
+{
+  let n = 0;
+  for (let r = 0; r < VS; r++) {
+    const z = -HALF + SIZE * r / SEG;
+    for (let c = 0; c < VS; c++) { GX[n] = -HALF + SIZE * c / SEG; GZ[n] = z; n++; }
+  }
+}
+const Lb = new Float32Array(NV), Lr = new Float32Array(NV), Lt = new Float32Array(NV),
+      Lm = new Float32Array(NV), Le = new Float32Array(NV), Lsd = new Float32Array(NV);
+const Ks = [], Kb = [];
+for (let i = 0; i < 16; i++) { Ks.push(new Float32Array(NV)); Kb.push(new Float32Array(NV)); }
+const QW = new Float32Array(NV * 4);
+function buildLayers() {
+  const iqw = 1 / (2 * 3.2 * 3.2);
+  for (let n = 0; n < NV; n++) {
+    const x = GX[n], z = GZ[n];
+    Lb[n] = fBase(x, z); Lr[n] = fRidge(x, z); Lt[n] = fTube(x, z);
+    Lm[n] = fBump(x, z); Le[n] = fTerr(x, z);  Lsd[n] = fSad(x, z);
+    for (let i = 0; i < 16; i++) { Ks[i][n] = KFs[i](x, z); Kb[i][n] = KFb[i](x, z); }
+    for (let q = 0; q < 4; q++) {
+      const Q = QUADRAS[q], dx = x - Q.cx, dz = z - Q.cz;
+      QW[n * 4 + q] = Math.exp(-(dx * dx + dz * dz) * iqw);
+    }
+  }
+}
+
+/* ================================================================
+   4 · STATE
+   ================================================================ */
+const S = {
+  layers: { dich: 1, axes: 1, modelA: 1, hybrid: 1, higher: 1 },   // animated weights
+  on:     { dich: true, axes: true, modelA: true, hybrid: true, higher: true },
+  w: 1,                    // grammar weight (Compare morphs this)
+  stress: 0.15, kAttr: 1, sigma: 0.6, drift: 0.15,
+  dcnh: 'off', quadra: -1, sel: [], trans: 0, sun: 1,
+};
+const D0 = 2.15;
+const profTgt = new Float32Array(16).fill(0.62);
+const profCur = new Float32Array(16).fill(0.62);
+const dCur = new Float32Array(16); let dmCur = 0;
+const DYN  = { k: 1, om: 1, noise: 1, damp: 1, depth: 1, ridge: 1, sad: 1 };
+const DYNT = Object.assign({}, DYN);
+const DCNH = {
+  off: { k: 1,    om: 1,    noise: 1,    damp: 1,    depth: 1,    ridge: 1,    sad: 1    },
+  D:   { k: 1.22, om: 1.22, noise: 1.0,  damp: 0.92, depth: 1.05, ridge: 1,    sad: 1    },
+  C:   { k: 0.95, om: 1.10, noise: 1.5,  damp: 0.95, depth: 0.96, ridge: 1,    sad: 1.45 },
+  N:   { k: 1.10, om: 0.88, noise: 0.68, damp: 1.18, depth: 1.12, ridge: 1.05, sad: 0.85 },
+  H:   { k: 0.90, om: 0.85, noise: 0.80, damp: 1.05, depth: 0.95, ridge: 0.78, sad: 1.10 },
+};
+const DCAP = {
+  off: 'No subtype accent. The swarm runs on type dynamics alone.',
+  D: 'Dominant \u00b7 strengthened Te and Fe. Energy given linearly: higher gain, wider assertive orbits, deeper commitment to the current basin.',
+  C: 'Creative \u00b7 strengthened Ne and Se. Energy given flexibly: more variability, and hybrid passes open sooner.',
+  N: 'Normalizing \u00b7 strengthened Ti and Fi. Energy preserved linearly: calmer noise, tighter orbits, deeper home basins.',
+  H: 'Harmonizing \u00b7 strengthened Si and Ni. Energy preserved flexibly: softer walls, gentler orbits, wider tolerance.',
+};
+function refreshDepths() {
+  let m = 0;
+  for (let i = 0; i < 16; i++) { dCur[i] = D0 * (0.45 + 0.95 * profCur[i]) * DYN.depth; m += profCur[i]; }
+  dmCur = D0 * (0.45 + 0.95 * (m / 16)) * DYN.depth;
+}
+function sadWeight() { return S.w * S.layers.hybrid * (0.55 + 0.85 * S.stress) * DYN.sad; }
+/* live field sample: mirrors the grid combination exactly */
+function hAt(x, z) {
+  let h = fBase(x, z)
+    + S.w * S.layers.dich * DYN.ridge * fRidge(x, z)
+    + S.w * S.layers.axes * (fTube(x, z) + fBump(x, z))
+    + S.w * S.layers.modelA * fTerr(x, z)
+    + sadWeight() * fSad(x, z);
+  const DB = (1 - S.w) * dmCur * 0.62;
+  for (let i = 0; i < 16; i++) h += S.w * dCur[i] * KFs[i](x, z) + DB * KFb[i](x, z);
+  return h;
+}
+const PRESETS = {
+  uniform: () => new Float32Array(16).fill(0.62),
+  ile: () => {
+    const sim = { 0: 0.95, 9: 0.82, 4: 0.76, 1: 0.72, 8: 0.68, 2: 0.62, 14: 0.55, 7: 0.50,
+                  3: 0.48, 5: 0.46, 12: 0.40, 10: 0.40, 6: 0.34, 11: 0.30, 13: 0.30, 15: 0.22 };
+    const a = new Float32Array(16), ile = TYPES[0];
+    for (let i = 0; i < 16; i++) a[i] = sim[XKEY(ile, TYPES[i])];
+    return a;
+  },
+  bimodal: () => {
+    const a = new Float32Array(16).fill(0.38);
+    const m = { ILE: 0.92, LIE: 0.90, ILI: 0.78, LII: 0.72, IEE: 0.55, LSE: 0.50, SLE: 0.48, SEI: 0.30, ESI: 0.26 };
+    TYPES.forEach(t => { if (m[t.code] !== undefined) a[t.i] = m[t.code]; });
+    return a;
+  },
+  beta: () => {
+    const a = new Float32Array(16);
+    TYPES.forEach(t => { a[t.i] = [0.52, 0.88, 0.55, 0.42][t.q]; });
+    return a;
+  },
+};
+
+/* ================================================================
+   5 · SCENE + TERRAIN
+   ================================================================ */
+let W = innerWidth, H = innerHeight;
+function createRenderer() {
+  /* probe first so failure produces an actionable message, then release the probe context */
+  const probe = document.createElement('canvas');
+  const raw = probe.getContext('webgl2') || probe.getContext('webgl') || probe.getContext('experimental-webgl');
+  if (!raw) {
+    throw new Error('the browser refused a WebGL context. Enable hardware acceleration in browser settings, or close other tabs holding WebGL, then reload.');
+  }
+  const lose = raw.getExtension && raw.getExtension('WEBGL_lose_context');
+  if (lose) lose.loseContext();
+  const attempts = [
+    { antialias: true,  preserveDrawingBuffer: true },
+    { antialias: false, preserveDrawingBuffer: true },
+    { antialias: false, preserveDrawingBuffer: false },
+  ];
+  for (let i = 0; i < attempts.length; i++) {
+    try { return new THREE.WebGLRenderer(attempts[i]); } catch (e) { /* retry with lighter settings */ }
+  }
+  throw new Error('WebGL is available, yet renderer creation failed. Reload the page or restart the browser.');
+}
+const renderer = createRenderer();
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(W, H);
+renderer.setClearColor(0x090e1b, 1);
+$('stage').appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x090e1b, 0.02);
+const cam = new THREE.PerspectiveCamera(42, W / H, 0.1, 200);
+
+const NRM = new Float32Array(NV * 3);
+for (let n = 0; n < NV; n++) NRM[n * 3 + 1] = 1;
+const SH = new Float32Array(NV); SH.fill(1);
+const geo = new THREE.BufferGeometry();
+{
+  const pos = new Float32Array(NV * 3);
+  for (let n = 0; n < NV; n++) { pos[n * 3] = GX[n]; pos[n * 3 + 1] = 0; pos[n * 3 + 2] = GZ[n]; }
+  const pa = new THREE.BufferAttribute(pos, 3); pa.setUsage(THREE.DynamicDrawUsage);
+  geo.setAttribute('position', pa);
+  geo.setAttribute('qw', new THREE.BufferAttribute(QW, 4));
+  const na = new THREE.BufferAttribute(NRM, 3); na.setUsage(THREE.DynamicDrawUsage);
+  geo.setAttribute('nrm', na);
+  const sa = new THREE.BufferAttribute(SH, 1); sa.setUsage(THREE.DynamicDrawUsage);
+  geo.setAttribute('sh', sa);
+  const idx = new Uint16Array(SEG * SEG * 6);
+  let k = 0;
+  for (let r = 0; r < SEG; r++) for (let c = 0; c < SEG; c++) {
+    const a = r * VS + c, b = a + 1, cc = a + VS, d = cc + 1;
+    idx[k++] = a; idx[k++] = cc; idx[k++] = b;
+    idx[k++] = b; idx[k++] = cc; idx[k++] = d;
+  }
+  geo.setIndex(new THREE.BufferAttribute(idx, 1));
+  geo.boundingSphere = new THREE.Sphere(new THREE.Vector3(0, 0, 0), 24);
+}
+const VSH = `
+attribute vec4 qw; attribute vec3 nrm; attribute float sh;
+varying vec3 vW; varying float vH; varying vec4 vQ; varying vec3 vN; varying float vSh;
+void main(){
+  vQ = qw; vH = position.y; vN = nrm; vSh = sh;
+  vec4 w = modelMatrix * vec4(position, 1.0);
+  vW = w.xyz;
+  gl_Position = projectionMatrix * viewMatrix * w;
+}`;
+const FSH = `
+varying vec3 vW; varying float vH; varying vec4 vQ; varying vec3 vN; varying float vSh;
+uniform vec3 uCam; uniform float uMin; uniform float uMax; uniform float uSun;
+uniform vec3 uSunDir;
+uniform vec4 uQB; uniform vec3 uQC[4];
+void main(){
+  vec3 nrm = normalize(vN);
+  float t = clamp((vH - uMin) / max(uMax - uMin, 0.001), 0.0, 1.0);
+  /* monochrome instrument ramp: obsidian floors, charcoal slopes, slate ridges */
+  vec3 obsidian = vec3(0.050, 0.062, 0.102);
+  vec3 charcoal = vec3(0.078, 0.094, 0.142);
+  vec3 slate    = vec3(0.122, 0.142, 0.196);
+  vec3 col = mix(obsidian, charcoal, smoothstep(0.05, 0.50, t));
+  col = mix(col, slate, smoothstep(0.50, 0.95, t));
+  /* quadra emphasis appears only under explicit selection */
+  vec3 tint = uQC[0]*vQ.x + uQC[1]*vQ.y + uQC[2]*vQ.z + uQC[3]*vQ.w;
+  col += tint * dot(vQ, uQB) * 0.16;
+  /* lighting: restrained key, raking sun with marched shadows, tight specular */
+  float lamTop = clamp(dot(nrm, normalize(vec3(0.35, 0.9, 0.25))), 0.0, 1.0);
+  float lamSun = clamp(dot(nrm, uSunDir), 0.0, 1.0) * vSh;
+  col *= mix(0.55 + 0.75 * lamTop, 0.41 + 0.36 * lamTop + 0.70 * lamSun, uSun);
+  vec3 Vv = normalize(uCam - vW);
+  vec3 Hh = normalize(uSunDir + Vv);
+  col += vec3(0.82, 0.88, 0.95) * pow(clamp(dot(nrm, Hh), 0.0, 1.0), 64.0) * 0.20 * vSh * uSun;
+  /* laser-etched isolines carrying the elevation gradient:
+     dim in the basins rising to bright white on the ridges */
+  vec3 cIso = mix(vec3(0.44, 0.50, 0.60), vec3(1.00, 1.00, 1.00), smoothstep(0.05, 0.95, t));
+  float wf = fwidth(vH * 2.8);
+  float g1 = abs(fract(vH * 2.8 - 0.5) - 0.5) / max(wf, 0.0001);
+  float l1 = (1.0 - smoothstep(0.70, 1.00, g1)) * clamp(1.9 - wf * 0.7, 0.0, 1.0);
+  col += cIso * l1 * 0.16;
+  float wm = fwidth(vH * 11.2);
+  float g2 = abs(fract(vH * 11.2 - 0.5) - 0.5) / max(wm, 0.0001);
+  float l2 = (1.0 - smoothstep(0.50, 0.80, g2)) * clamp(1.9 - wm * 0.7, 0.0, 1.0);
+  col += cIso * l2 * 0.05;
+  /* reference grid */
+  float gx = abs(fract(vW.x * 0.5 - 0.5) - 0.5) / max(fwidth(vW.x * 0.5), 0.0001);
+  float gz = abs(fract(vW.z * 0.5 - 0.5) - 0.5) / max(fwidth(vW.z * 0.5), 0.0001);
+  col += vec3(0.5, 0.55, 0.6) * (1.0 - min(min(gx, gz), 1.0)) * 0.014;
+  /* depth fog into the void */
+  float d = distance(vW, uCam);
+  float fo = 1.0 - exp(-pow(d * 0.028, 2.0));
+  col = mix(col, vec3(0.035, 0.055, 0.106), clamp(fo, 0.0, 1.0));
+  gl_FragColor = vec4(col, 1.0);
+}`;
+/* low sun for raking light; normalized once, shared by shader and shadow march */
+const SUNV = (() => { const x = -0.62, y = 0.30, z = -0.50, l = Math.sqrt(x*x + y*y + z*z); return { x: x/l, y: y/l, z: z/l }; })();
+const SUNHL = Math.sqrt(SUNV.x * SUNV.x + SUNV.z * SUNV.z);
+const SUNHX = SUNV.x / SUNHL, SUNHZ = SUNV.z / SUNHL, SUNSLOPE = SUNV.y / SUNHL;
+const SUNSTEPS = [0.45, 0.95, 1.6, 2.5, 3.7, 5.2];
+const uni = {
+  uCam: { value: new THREE.Vector3() },
+  uMin: { value: -2 }, uMax: { value: 2 }, uStress: { value: S.stress },
+  uSun: { value: 1 },
+  uSunDir: { value: new THREE.Vector3(SUNV.x, SUNV.y, SUNV.z) },
+  uQB: { value: new THREE.Vector4(0, 0, 0, 0) },
+  uQC: { value: QUADRAS.map(q => { const c = new THREE.Color(q.col); return new THREE.Vector3(c.r, c.g, c.b); }) },
+};
+const terraMat = new THREE.ShaderMaterial({ vertexShader: VSH, fragmentShader: FSH, uniforms: uni });
+terraMat.extensions = { derivatives: true };
+const terrain = new THREE.Mesh(geo, terraMat);
+terrain.frustumCulled = false;
+scene.add(terrain);
+
+/* edge skirt: a graded curtain around the perimeter so no camera angle can see under the sheet */
+const PERIM = [];
+for (let c = 0; c < SEG; c++) PERIM.push(c);
+for (let r = 0; r < SEG; r++) PERIM.push(r * VS + SEG);
+for (let c = SEG; c > 0; c--) PERIM.push(SEG * VS + c);
+for (let r = SEG; r > 0; r--) PERIM.push(r * VS);
+const PN = PERIM.length;
+const skirtGeo = new THREE.BufferGeometry();
+const skPos = new Float32Array(PN * 2 * 3);
+{
+  const skN = new Float32Array(PN * 2 * 3);
+  const skQ = new Float32Array(PN * 2 * 4);
+  const skS = new Float32Array(PN * 2); skS.fill(1);
+  for (let k = 0; k < PN; k++) {
+    const n = PERIM[k], x = GX[n], z = GZ[n];
+    skPos[k * 3] = x; skPos[k * 3 + 2] = z;
+    skPos[(PN + k) * 3] = x; skPos[(PN + k) * 3 + 1] = -4.2; skPos[(PN + k) * 3 + 2] = z;
+    const l = Math.hypot(x, z) || 1;
+    skN[k * 3] = x / l; skN[k * 3 + 1] = 0.25; skN[k * 3 + 2] = z / l;
+    skN[(PN + k) * 3] = x / l; skN[(PN + k) * 3 + 1] = 0.25; skN[(PN + k) * 3 + 2] = z / l;
+    for (let q = 0; q < 4; q++) {
+      const Q = QUADRAS[q], dx = x - Q.cx, dz = z - Q.cz;
+      const wq = Math.exp(-(dx * dx + dz * dz) / (2 * 3.2 * 3.2));
+      skQ[k * 4 + q] = wq; skQ[(PN + k) * 4 + q] = wq;
+    }
+  }
+  const idx = new Uint16Array(PN * 6);
+  let k2 = 0;
+  for (let k = 0; k < PN; k++) {
+    const a = k, b = (k + 1) % PN, c = PN + k, d = PN + ((k + 1) % PN);
+    idx[k2++] = a; idx[k2++] = c; idx[k2++] = b;
+    idx[k2++] = b; idx[k2++] = c; idx[k2++] = d;
+  }
+  const pa = new THREE.BufferAttribute(skPos, 3); pa.setUsage(THREE.DynamicDrawUsage);
+  skirtGeo.setAttribute('position', pa);
+  skirtGeo.setAttribute('nrm', new THREE.BufferAttribute(skN, 3));
+  skirtGeo.setAttribute('qw', new THREE.BufferAttribute(skQ, 4));
+  skirtGeo.setAttribute('sh', new THREE.BufferAttribute(skS, 1));
+  skirtGeo.setIndex(new THREE.BufferAttribute(idx, 1));
+  skirtGeo.boundingSphere = new THREE.Sphere(new THREE.Vector3(0, 0, 0), 24);
+}
+const skirtMat = new THREE.ShaderMaterial({ vertexShader: VSH, fragmentShader: FSH, uniforms: uni, side: THREE.DoubleSide });
+skirtMat.extensions = { derivatives: true };
+const skirt = new THREE.Mesh(skirtGeo, skirtMat);
+skirt.frustumCulled = false;
+scene.add(skirt);
+
+let HMIN = -2, HMAX = 2;
+function gridH(x, z) {
+  const posA = geo.attributes.position.array;
+  const fx = (x + HALF) / SIZE * SEG, fz = (z + HALF) / SIZE * SEG;
+  let c = Math.floor(fx), r = Math.floor(fz);
+  if (c < 0) c = 0; if (c > SEG - 1) c = SEG - 1;
+  if (r < 0) r = 0; if (r > SEG - 1) r = SEG - 1;
+  const u = clamp(fx - c, 0, 1), v = clamp(fz - r, 0, 1), n = r * VS + c;
+  const a = posA[n * 3 + 1], b = posA[(n + 1) * 3 + 1];
+  const cc = posA[(n + VS) * 3 + 1], d = posA[(n + VS + 1) * 3 + 1];
+  return (a * (1 - u) + b * u) * (1 - v) + (cc * (1 - u) + d * u) * v;
+}
+function combine() {
+  refreshDepths();
+  const posA = geo.attributes.position.array;
+  const w = S.w, L = S.layers;
+  const rW = w * L.dich * DYN.ridge, aW = w * L.axes, eW = w * L.modelA, sW = sadWeight();
+  const DB = (1 - w) * dmCur * 0.62;
+  const DS = new Float32Array(16);
+  for (let i = 0; i < 16; i++) DS[i] = w * dCur[i];
+  let mn = 1e9, mx = -1e9;
+  for (let n = 0; n < NV; n++) {
+    let h = Lb[n] + rW * Lr[n] + aW * (Lt[n] + Lm[n]) + eW * Le[n] + sW * Lsd[n];
+    for (let i = 0; i < 16; i++) h += DS[i] * Ks[i][n] + DB * Kb[i][n];
+    posA[n * 3 + 1] = h;
+    if (h < mn) mn = h; if (h > mx) mx = h;
+  }
+  /* smooth per-vertex normals from central differences on the grid */
+  const inv2 = SEG / (2 * SIZE);
+  for (let r = 0; r < VS; r++) {
+    const rm = Math.max(r - 1, 0) * VS, rp = Math.min(r + 1, SEG) * VS, r0 = r * VS;
+    for (let c = 0; c < VS; c++) {
+      const n = r0 + c;
+      const hl = posA[(r0 + Math.max(c - 1, 0)) * 3 + 1];
+      const hr = posA[(r0 + Math.min(c + 1, SEG)) * 3 + 1];
+      const hb = posA[(rm + c) * 3 + 1], hf = posA[(rp + c) * 3 + 1];
+      const nx = (hl - hr) * inv2, nz = (hb - hf) * inv2;
+      const il = 1 / Math.sqrt(nx * nx + 1 + nz * nz);
+      NRM[n * 3] = nx * il; NRM[n * 3 + 1] = il; NRM[n * 3 + 2] = nz * il;
+    }
+  }
+  /* height-field shadow march toward the low sun (soft, recomputed on every deformation) */
+  if (S.sun > 0.005) {
+    for (let n = 0; n < NV; n++) {
+      const x = GX[n], z = GZ[n], h0 = posA[n * 3 + 1];
+      let occ = 0;
+      for (let s = 0; s < SUNSTEPS.length; s++) {
+        const d = SUNSTEPS[s];
+        const sx = x + SUNHX * d, sz = z + SUNHZ * d;
+        if (sx < -HALF || sx > HALF || sz < -HALF || sz > HALF) break;
+        const dh = gridH(sx, sz) - (h0 + SUNSLOPE * d + 0.05);
+        if (dh > occ) occ = dh;
+      }
+      SH[n] = 1 - 0.62 * sstep(0.02, 0.75, occ);
+    }
+  } else SH.fill(1);
+  geo.attributes.position.needsUpdate = true;
+  geo.attributes.nrm.needsUpdate = true;
+  geo.attributes.sh.needsUpdate = true;
+  /* keep the skirt's top ring glued to the field edge */
+  for (let k = 0; k < PN; k++) skPos[k * 3 + 1] = posA[PERIM[k] * 3 + 1];
+  skirtGeo.attributes.position.needsUpdate = true;
+  uni.uMin.value = mn; uni.uMax.value = mx; HMIN = mn; HMAX = mx;
+  anchorUpdate();
+}
+
+/* ================================================================
+   6 · MARKERS · orbs, hybrid passes, quadra circuits, halos
+   ================================================================ */
+function makeGlowTex() {
+  const c = document.createElement('canvas'); c.width = c.height = 128;
+  const g = c.getContext('2d');
+  const gr = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+  gr.addColorStop(0, 'rgba(255,255,255,1)');
+  gr.addColorStop(0.10, 'rgba(255,255,255,0.85)');
+  gr.addColorStop(0.22, 'rgba(255,255,255,0.30)');
+  gr.addColorStop(0.40, 'rgba(255,255,255,0.06)');
+  gr.addColorStop(0.65, 'rgba(255,255,255,0)');
+  gr.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = gr; g.fillRect(0, 0, 128, 128);
+  return new THREE.CanvasTexture(c);
+}
+function makeDiamondTex() {
+  const c = document.createElement('canvas'); c.width = c.height = 128;
+  const g = c.getContext('2d');
+  g.translate(64, 64); g.rotate(Math.PI / 4);
+  const gr = g.createLinearGradient(-34, -34, 34, 34);
+  gr.addColorStop(0, 'rgba(255,255,255,0.95)');
+  gr.addColorStop(1, 'rgba(255,255,255,0.30)');
+  g.fillStyle = gr; g.fillRect(-26, -26, 52, 52);
+  g.strokeStyle = 'rgba(255,255,255,0.9)'; g.lineWidth = 5;
+  g.strokeRect(-26, -26, 52, 52);
+  return new THREE.CanvasTexture(c);
+}
+const texGlow = makeGlowTex(), texDiamond = makeDiamondTex();
+function circlePts(r, n) {
+  const pts = [];
+  for (let s = 0; s < n; s++) { const a = s / n * TAU; pts.push(new THREE.Vector3(Math.cos(a) * r, 0, Math.sin(a) * r)); }
+  return pts;
+}
+const YA = new Float32Array(16), DN = new Float32Array(16),
+      glowBase = new Float32Array(16), FLASH = new Float32Array(16);
+const orbGlow = [], orbCore = [], halos = [];
+for (let i = 0; i < 16; i++) {
+  const col = new THREE.Color(QUADRAS[TYPES[i].q].col);
+  const g = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: texGlow, color: col, transparent: true, opacity: 0.4,
+    depthWrite: false, blending: THREE.AdditiveBlending }));
+  scene.add(g); orbGlow.push(g);
+  const c = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: texGlow, color: 0xffffff, transparent: true, opacity: 0.85,
+    depthWrite: false, blending: THREE.AdditiveBlending }));
+  c.scale.set(0.68, 0.68, 1); scene.add(c); orbCore.push(c);
+  const h = new THREE.LineLoop(
+    new THREE.BufferGeometry().setFromPoints(circlePts(1.45, 64)),
+    new THREE.LineBasicMaterial({ color: col, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false }));
+  h.position.set(TYPES[i].x, 0, TYPES[i].z); h.visible = false; h.frustumCulled = false;
+  scene.add(h); halos.push(h);
+}
+const sadSprites = [];
+PASSES.filter(p => p.strong).forEach(p => {
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: texDiamond, color: 0xe0ae54, transparent: true, opacity: 0.3,
+    depthWrite: false, blending: THREE.AdditiveBlending }));
+  s.userData = { x: p.x, z: p.z };
+  scene.add(s); sadSprites.push(s);
+});
+const qRings = [];
+for (let q = 0; q < 4; q++) {
+  const m = new THREE.LineLoop(
+    new THREE.BufferGeometry().setFromPoints(circlePts(2.6, 72)),
+    new THREE.LineBasicMaterial({ color: new THREE.Color(QUADRAS[q].col), transparent: true, opacity: 0.1, blending: THREE.AdditiveBlending, depthWrite: false }));
+  m.position.set(QUADRAS[q].cx, 1, QUADRAS[q].cz); m.frustumCulled = false;
+  scene.add(m); qRings.push(m);
+}
+
+function anchorUpdate() {
+  for (let i = 0; i < 16; i++) {
+    const t = TYPES[i];
+    const y = hAt(t.x, t.z);
+    YA[i] = y;
+    const dn = clamp((S.w * dCur[i] + (1 - S.w) * dmCur * 0.62) / (D0 * 1.5), 0, 1);
+    DN[i] = dn;
+    orbGlow[i].position.set(t.x, y + 0.32, t.z);
+    orbCore[i].position.set(t.x, y + 0.30, t.z);
+    glowBase[i] = 1.7 + 1.5 * dn;
+    orbGlow[i].material.opacity = 0.34 + 0.46 * dn;
+    halos[i].position.y = y + 0.26;
+  }
+  const so = clamp(sadWeight(), 0, 1.4) / 1.4;
+  sadSprites.forEach(s => {
+    const y = hAt(s.userData.x, s.userData.z);
+    s.position.set(s.userData.x, y + 0.3, s.userData.z);
+    s.material.opacity = 0.06 + 0.6 * so;
+    const sc = 0.42 + 0.3 * so; s.scale.set(sc, sc, 1);
+  });
+  for (let q = 0; q < 4; q++) {
+    let m = -1e9;
+    TYPES.forEach(t => { if (t.q === q && YA[t.i] > m) m = YA[t.i]; });
+    qRings[q].position.y = m + 0.85;
+  }
+  rebuildLines();
+}
+
+/* ================================================================
+   7 · PARTICLES + TRAILS · the person-level swarm
+   ================================================================ */
+const NP = 64, TR = 22;
+const px = new Float32Array(NP), pz = new Float32Array(NP),
+      vx = new Float32Array(NP), vz = new Float32Array(NP),
+      ox = new Float32Array(NP), oz = new Float32Array(NP),
+      ph = new Float32Array(NP), spin = new Float32Array(NP);
+const cap = new Int16Array(NP), home = new Int16Array(NP);
+const tX = new Float32Array(NP * TR), tY = new Float32Array(NP * TR), tZ = new Float32Array(NP * TR);
+const thead = new Int16Array(NP), tlen = new Int16Array(NP);
+const sAcc = new Float32Array(16), cAcc = new Float32Array(16), nAcc = new Int16Array(16),
+      phMean = new Float32Array(16), phN = new Int16Array(16);
+
+const pGeo = new THREE.BufferGeometry();
+const pPos = new Float32Array(NP * 3), pcol = new Float32Array(NP * 3);
+{
+  const pa = new THREE.BufferAttribute(pPos, 3); pa.setUsage(THREE.DynamicDrawUsage);
+  pGeo.setAttribute('position', pa);
+  pGeo.setAttribute('color', new THREE.BufferAttribute(pcol, 3));
+}
+const pts = new THREE.Points(pGeo, new THREE.PointsMaterial({
+  size: 1.06, map: texGlow, transparent: true, opacity: 0.98,
+  alphaTest: 0.008, depthWrite: false, depthTest: true,
+  sizeAttenuation: true, blending: THREE.AdditiveBlending, vertexColors: true }));
+pts.frustumCulled = false; pts.renderOrder = 4; scene.add(pts);
+
+const MAXSEG = NP * (TR - 1);
+const trPos = new Float32Array(MAXSEG * 6), trCol = new Float32Array(MAXSEG * 6);
+const trGeo = new THREE.BufferGeometry();
+{
+  const pa = new THREE.BufferAttribute(trPos, 3); pa.setUsage(THREE.DynamicDrawUsage);
+  const ca = new THREE.BufferAttribute(trCol, 3); ca.setUsage(THREE.DynamicDrawUsage);
+  trGeo.setAttribute('position', pa); trGeo.setAttribute('color', ca);
+}
+const trLine = new THREE.LineSegments(trGeo, new THREE.LineBasicMaterial({
+  vertexColors: true, transparent: true, opacity: 0.9,
+  blending: THREE.AdditiveBlending, depthWrite: false }));
+trLine.frustumCulled = false; scene.add(trLine);
+
+function spawnParticles() {
+  for (let p = 0; p < NP; p++) {
+    const t = TYPES[p % 16];
+    const a = Math.random() * TAU, r = 0.38 + Math.random() * 0.88;
+    px[p] = t.x + Math.cos(a) * r; pz[p] = t.z + Math.sin(a) * r;
+    vx[p] = (Math.random() - 0.5) * 0.6; vz[p] = (Math.random() - 0.5) * 0.6;
+    ox[p] = 0; oz[p] = 0; home[p] = t.i; cap[p] = t.i;
+    spin[p] = Math.random() < 0.5 ? -1 : 1;
+    const hh = hAt(px[p], pz[p]); ph[p] = hh;
+    pPos[p * 3] = px[p]; pPos[p * 3 + 1] = hh + 0.19; pPos[p * 3 + 2] = pz[p];
+    const c = new THREE.Color(QUADRAS[t.q].col); const v = 0.85 + Math.random() * 0.3;
+    pcol[p * 3] = c.r * v; pcol[p * 3 + 1] = c.g * v; pcol[p * 3 + 2] = c.b * v;
+    tlen[p] = 0; thead[p] = 0;
+  }
+  pGeo.attributes.position.needsUpdate = true;
+  pGeo.attributes.color.needsUpdate = true;
+}
+function stepParticles(dt) {
+  const KG = 2.3 * S.kAttr * DYN.k * (0.35 + 0.65 * S.w);
+  const OM = 1.15 * DYN.om * (0.6 + 0.4 * S.w);
+  const NA = 2.4 * S.sigma * (1 + 1.8 * S.stress) * DYN.noise * (1.7 - 0.7 * S.w);
+  const dampF = Math.exp(-dt * 2.3 * DYN.damp);
+  const HIW = S.layers.higher * S.w;
+  sAcc.fill(0); cAcc.fill(0); nAcc.fill(0);
+  for (let p = 0; p < NP; p++) {
+    let x = px[p], z = pz[p];
+    /* capture with hysteresis */
+    let ni = 0, nd2 = 1e9;
+    for (let i = 0; i < 16; i++) {
+      const dx = x - TYPES[i].x, dz = z - TYPES[i].z, d2 = dx * dx + dz * dz;
+      if (d2 < nd2) { nd2 = d2; ni = i; }
+    }
+    const cur = cap[p];
+    const cdx = x - TYPES[cur].x, cdz = z - TYPES[cur].z, cd2 = cdx * cdx + cdz * cdz;
+    if (ni !== cur && (nd2 < cd2 * 0.55 || cd2 > 11.5)) { cap[p] = ni; S.trans++; FLASH[ni] = 1; }
+    const c = TYPES[cap[p]];
+    /* central-difference gradient descent on free energy.
+       Symmetric sampling removes the directional bias of a forward difference. */
+    const e = 0.075;
+    const gx = (hAt(x + e, z) - hAt(x - e, z)) / (2 * e);
+    const gz = (hAt(x, z + e) - hAt(x, z - e)) / (2 * e);
+    let fx = -gx * KG, fz = -gz * KG;
+    /* orbit steering inside the basin */
+    const rx = x - c.x, rz = z - c.z, rl = Math.sqrt(rx * rx + rz * rz);
+    if (rl < 2.9 && rl > 1e-4) {
+      const sp0 = spin[p];
+      const txd = -rz / rl * sp0, tzd = rx / rl * sp0;
+      let spd = OM * (0.5 + 0.55 * Math.min(rl / 1.5, 1));
+      const th = Math.atan2(rz, rx) * sp0;
+      if (HIW > 0.02 && phN[c.dual] > 0) spd += 0.5 * HIW * Math.sin(phMean[c.dual] - th);
+      fx += (txd * spd - vx[p]) * 1.7; fz += (tzd * spd - vz[p]) * 1.7;
+      sAcc[cap[p]] += Math.sin(th); cAcc[cap[p]] += Math.cos(th); nAcc[cap[p]]++;
+      if (S.drift > 0.01) { fx += ((c.x + ox[p]) - x) * 0.55 * S.drift; fz += ((c.z + oz[p]) - z) * 0.55 * S.drift; }
+    }
+    /* intra-individual variability as a frame-rate-stable stochastic impulse.
+       The calibration matches the former 60 Hz appearance while remaining
+       consistent when a display or background tab runs at another cadence. */
+    const nk = NA * Math.sqrt(dt / 60);
+    vx[p] += (Math.random() * 2 - 1) * nk;
+    vz[p] += (Math.random() * 2 - 1) * nk;
+    /* baseline drift as an OU walk of the set-point */
+    ox[p] += ((Math.random() * 2 - 1) * 1.3 * S.drift - ox[p] * 0.4) * dt;
+    oz[p] += ((Math.random() * 2 - 1) * 1.3 * S.drift - oz[p] * 0.4) * dt;
+    ox[p] = clamp(ox[p], -1.8, 1.8); oz[p] = clamp(oz[p], -1.8, 1.8);
+    /* conflictor avoidance field */
+    if (HIW > 0.02) {
+      const cc = TYPES[TYPES[home[p]].conf];
+      const ax = x - cc.x, az = z - cc.z, ad2 = ax * ax + az * az;
+      if (ad2 < 20 && ad2 > 1e-3) {
+        const s = 1.6 * HIW * Math.exp(-ad2 / 9) / Math.sqrt(ad2);
+        fx += ax * s; fz += az * s;
+      }
+    }
+    vx[p] = (vx[p] + fx * dt) * dampF;
+    vz[p] = (vz[p] + fz * dt) * dampF;
+    const sp2 = vx[p] * vx[p] + vz[p] * vz[p];
+    if (sp2 > 42) { const s = 6.5 / Math.sqrt(sp2); vx[p] *= s; vz[p] *= s; }
+    x += vx[p] * dt; z += vz[p] * dt;
+    if (x < -11.3) { x = -11.3; if (vx[p] < 0) vx[p] *= -0.5; }
+    if (x >  11.3) { x =  11.3; if (vx[p] > 0) vx[p] *= -0.5; }
+    if (z < -11.3) { z = -11.3; if (vz[p] < 0) vz[p] *= -0.5; }
+    if (z >  11.3) { z =  11.3; if (vz[p] > 0) vz[p] *= -0.5; }
+    px[p] = x; pz[p] = z;
+    const hh = hAt(x, z); ph[p] = hh;
+    pPos[p * 3] = x; pPos[p * 3 + 1] = hh + 0.19; pPos[p * 3 + 2] = z;
+  }
+  for (let i = 0; i < 16; i++) {
+    phN[i] = nAcc[i];
+    if (nAcc[i] > 0) phMean[i] = Math.atan2(sAcc[i], cAcc[i]);
+  }
+  pGeo.attributes.position.needsUpdate = true;
+}
+function pushTrails() {
+  for (let p = 0; p < NP; p++) {
+    const b = p * TR + thead[p];
+    tX[b] = pPos[p * 3]; tY[b] = pPos[p * 3 + 1]; tZ[b] = pPos[p * 3 + 2];
+    thead[p] = (thead[p] + 1) % TR;
+    if (tlen[p] < TR) tlen[p]++;
+  }
+}
+function buildTrails() {
+  let k = 0;
+  for (let p = 0; p < NP; p++) {
+    const L = tlen[p]; if (L < 2) continue;
+    const r = pcol[p * 3], g = pcol[p * 3 + 1], bl = pcol[p * 3 + 2];
+    const start = (thead[p] - L + 2 * TR) % TR;
+    for (let s = 0; s < L - 1; s++) {
+      const i0 = p * TR + ((start + s) % TR), i1 = p * TR + ((start + s + 1) % TR);
+      const f0 = Math.pow((s + 1) / L, 1.6) * 0.55, f1 = Math.pow((s + 2) / L, 1.6) * 0.55;
+      const o = k * 6;
+      trPos[o] = tX[i0]; trPos[o + 1] = tY[i0]; trPos[o + 2] = tZ[i0];
+      trPos[o + 3] = tX[i1]; trPos[o + 4] = tY[i1]; trPos[o + 5] = tZ[i1];
+      trCol[o] = r * f0; trCol[o + 1] = g * f0; trCol[o + 2] = bl * f0;
+      trCol[o + 3] = r * f1; trCol[o + 4] = g * f1; trCol[o + 5] = bl * f1;
+      k++;
+    }
+  }
+  trGeo.attributes.position.needsUpdate = true;
+  trGeo.attributes.color.needsUpdate = true;
+  trGeo.setDrawRange(0, k * 2);
+}
+
+/* ================================================================
+   8 · TERRAIN-CONFORMING RIPPLES
+   Each wavefront is rebuilt from the live height field every frame.
+   Unlike a flat RingGeometry, the light ribbon climbs ridges, descends
+   into basins, and continues to track the field while it deforms.
+   ================================================================ */
+const RIPSEG = 192, RIPDUR = 1.12, RIPMAX = 12.2;
+const ripples = [];
+function makeRipple() {
+  const g = new THREE.BufferGeometry();
+  const pos = new Float32Array(RIPSEG * 2 * 3);
+  const idx = new Uint16Array(RIPSEG * 6);
+  for (let i = 0, k = 0; i < RIPSEG; i++) {
+    const n = (i + 1) % RIPSEG, a = i * 2, b = a + 1, c = n * 2, d = c + 1;
+    idx[k++] = a; idx[k++] = c; idx[k++] = b;
+    idx[k++] = b; idx[k++] = c; idx[k++] = d;
+  }
+  const pa = new THREE.BufferAttribute(pos, 3); pa.setUsage(THREE.DynamicDrawUsage);
+  g.setAttribute('position', pa); g.setIndex(new THREE.BufferAttribute(idx, 1));
+  g.boundingSphere = new THREE.Sphere(new THREE.Vector3(), 20);
+  const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({
+    color: 0x67dcf4, transparent: true, opacity: 0, side: THREE.DoubleSide,
+    blending: THREE.AdditiveBlending, depthWrite: false, depthTest: true
+  }));
+  m.visible = false; m.frustumCulled = false;
+  m.userData = { life: 1e9, x: 0, z: 0 };
+  scene.add(m); return m;
+}
+for (let i = 0; i < 5; i++) ripples.push(makeRipple());
+function shapeRipple(m, radius, width) {
+  const pos = m.geometry.attributes.position.array;
+  const ri = Math.max(0.04, radius - width * 0.5), ro = radius + width * 0.5;
+  for (let i = 0; i < RIPSEG; i++) {
+    const a = i / RIPSEG * TAU, ca = Math.cos(a), sa = Math.sin(a);
+    const xi = m.userData.x + ca * ri, zi = m.userData.z + sa * ri;
+    const xo = m.userData.x + ca * ro, zo = m.userData.z + sa * ro;
+    const o = i * 6;
+    pos[o] = xi; pos[o + 1] = gridH(xi, zi) + 0.13; pos[o + 2] = zi;
+    pos[o + 3] = xo; pos[o + 4] = gridH(xo, zo) + 0.13; pos[o + 5] = zo;
+  }
+  m.geometry.attributes.position.needsUpdate = true;
+}
+function spawnRipple(x, z) {
+  const m = ripples.find(r => r.userData.life >= RIPDUR) || ripples.reduce((a, b) => a.userData.life > b.userData.life ? a : b);
+  m.userData.life = 0; m.userData.x = x; m.userData.z = z;
+  shapeRipple(m, 0.18, 0.16);
+  m.visible = true;
+}
+function updateRipples(dt) {
+  ripples.forEach(m => {
+    if (m.userData.life >= RIPDUR) { m.visible = false; return; }
+    m.userData.life += dt;
+    const u = clamp(m.userData.life / RIPDUR, 0, 1);
+    const eased = 1 - Math.pow(1 - u, 1.7);
+    shapeRipple(m, 0.18 + eased * RIPMAX, 0.14 + u * 0.20);
+    m.material.opacity = 0.62 * Math.pow(1 - u, 1.35);
+    if (u >= 1) m.visible = false;
+  });
+}
+
+/* ================================================================
+   9 · TEAM COUPLING LINES
+   ================================================================ */
+const lineGroup = new THREE.Group(); scene.add(lineGroup);
+const VCOL = { sup: 0x46d4f2, neu: 0x9aa3b2, ten: 0xe0ae54, cst: 0xd4556a };
+function rebuildLines() {
+  while (lineGroup.children.length) {
+    const c = lineGroup.children.pop();
+    c.geometry.dispose(); c.material.dispose();
+  }
+  for (let a = 0; a < S.sel.length; a++) for (let b = a + 1; b < S.sel.length; b++) {
+    const A = TYPES[S.sel[a]], B = TYPES[S.sel[b]], R = RELS[XKEY(A, B)];
+    const ya = YA[A.i] + 0.35, yb = YA[B.i] + 0.35;
+    const my = Math.max(ya, yb) + 2.0, mx = (A.x + B.x) / 2, mz = (A.z + B.z) / 2;
+    const arc = [];
+    for (let s = 0; s <= 24; s++) {
+      const u = s / 24, q = 1 - u;
+      arc.push(new THREE.Vector3(
+        q * q * A.x + 2 * q * u * mx + u * u * B.x,
+        q * q * ya + 2 * q * u * my + u * u * yb,
+        q * q * A.z + 2 * q * u * mz + u * u * B.z));
+    }
+    const l = new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints(arc),
+      new THREE.LineBasicMaterial({ color: VCOL[R.v], transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending, depthWrite: false }));
+    l.frustumCulled = false;
+    lineGroup.add(l);
+  }
+}
+function toggleSel(i) {
+  const idx = S.sel.indexOf(i);
+  if (idx >= 0) S.sel.splice(idx, 1);
+  else { if (S.sel.length >= 4) S.sel.shift(); S.sel.push(i); }
+  syncTeam();
+}
+function syncTeam() {
+  const chips = $('chips'); chips.innerHTML = '';
+  S.sel.forEach(i => {
+    const t = TYPES[i];
+    const c = document.createElement('span'); c.className = 'chip';
+    c.innerHTML = '<span class="cdot" style="background:' + QUADRAS[t.q].col + '"></span>' + t.code +
+      '<button aria-label="Remove ' + t.code + '">\u00d7</button>';
+    c.querySelector('button').onclick = () => toggleSel(i);
+    chips.appendChild(c);
+  });
+  for (let i = 0; i < 16; i++) {
+    halos[i].visible = S.sel.includes(i);
+    lblEls[i].classList.toggle('sel', S.sel.includes(i));
+  }
+  const pr = $('pairs'); pr.innerHTML = '';
+  const cp = $('coupling');
+  if (S.sel.length < 2) { cp.hidden = true; rebuildLines(); return; }
+  let sum = 0, n = 0;
+  for (let a = 0; a < S.sel.length; a++) for (let b = a + 1; b < S.sel.length; b++) {
+    const A = TYPES[S.sel[a]], B = TYPES[S.sel[b]], R = RELS[XKEY(A, B)];
+    sum += R.w; n++;
+    const row = document.createElement('div'); row.className = 'pair';
+    row.innerHTML = '<span class="pnm">' + relLabel(A, B).split(' \u00b7 ')[0] + '</span>' +
+      '<span class="prl ' + R.v + '">' + R.n + '</span>';
+    pr.appendChild(row);
+  }
+  const cost = sum / n;
+  cp.hidden = false;
+  $('cval').textContent = cost.toFixed(2);
+  $('cqual').textContent =
+    cost <= -0.55 ? 'minimal friction' :
+    cost <= -0.15 ? 'low friction' :
+    cost <   0.30 ? 'moderate' :
+    cost <   0.65 ? 'high friction' : 'severe friction';
+  const fill = $('cfill');
+  fill.style.width = (((cost + 1) / 2) * 100).toFixed(0) + '%';
+  fill.style.background = cost < 0 ? 'var(--teal)' : cost < 0.6 ? 'var(--amber)' : 'var(--rose)';
+  rebuildLines();
+}
+
+/* ================================================================
+   10 · TYPE LABELS (DOM overlay)
+   ================================================================ */
+const lblEls = [];
+{
+  const wrap = $('labels');
+  TYPES.forEach(t => {
+    const el = document.createElement('div');
+    el.className = 'lbl'; el.title = t.name + ' \u00b7 ' + t.base + ' ' + t.cre;
+    el.innerHTML = '<span class="dot" style="background:' + QUADRAS[t.q].col + '"></span>' + t.code;
+    el.addEventListener('click', () => toggleSel(t.i));
+    wrap.appendChild(el); lblEls.push(el);
+  });
+}
+const tmpV = new THREE.Vector3(), tmpV2 = new THREE.Vector3();
+function placeLabels() {
+  for (let i = 0; i < 16; i++) {
+    const t = TYPES[i], el = lblEls[i];
+    tmpV.set(t.x, YA[i] + 1.05, t.z).project(cam);
+    if (tmpV.z > 1 || tmpV.z < -1) { el.style.display = 'none'; continue; }
+    el.style.display = 'flex';
+    const sx = (tmpV.x * 0.5 + 0.5) * W, sy = (-tmpV.y * 0.5 + 0.5) * H;
+    el.style.transform = 'translate(' + sx.toFixed(1) + 'px,' + sy.toFixed(1) + 'px) translate(-50%,-100%)';
+    const d = cam.position.distanceTo(tmpV2.set(t.x, YA[i], t.z));
+    el.style.opacity = clamp(1.7 - d / 34, 0.25, 1).toFixed(2);
+  }
+}
+
+/* ================================================================
+   11 · CAMERA CONTROLS + PERTURBATION
+   ================================================================ */
+const orb = { az: Math.PI * 1.25, pol: 0.96, r: 24.5, tx: -1.06, tz: -1.06, taz: Math.PI * 1.25, tpol: 0.96, tr: 24.5, ttx: -1.06, ttz: -1.06 };
+function applyCam() {
+  orb.az += (orb.taz - orb.az) * 0.12;
+  orb.pol += (orb.tpol - orb.pol) * 0.12;
+  orb.r += (orb.tr - orb.r) * 0.12;
+  orb.tx += (orb.ttx - orb.tx) * 0.12;
+  orb.tz += (orb.ttz - orb.tz) * 0.12;
+  const sp = Math.sin(orb.pol);
+  cam.position.set(
+    orb.tx + orb.r * sp * Math.sin(orb.az),
+    orb.r * Math.cos(orb.pol),
+    orb.tz + orb.r * sp * Math.cos(orb.az));
+  cam.lookAt(orb.tx, 0, orb.tz);
+}
+function resetView() { orb.taz = Math.PI * 1.25; orb.tpol = 0.96; orb.tr = 24.5; orb.ttx = -1.06; orb.ttz = -1.06; }
+const cvs = renderer.domElement;
+cvs.style.touchAction = 'none';
+const ptrs = new Map();
+let drag = null, pinchD = 0;
+cvs.addEventListener('pointerdown', e => {
+  cvs.setPointerCapture(e.pointerId);
+  ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (ptrs.size === 1) {
+    drag = { x: e.clientX, y: e.clientY, t: performance.now(), moved: false, btn: e.button, shift: e.shiftKey };
+  } else {
+    drag = null;
+    const arr = [...ptrs.values()];
+    pinchD = Math.hypot(arr[0].x - arr[1].x, arr[0].y - arr[1].y);
+  }
+});
+cvs.addEventListener('pointermove', e => {
+  if (!ptrs.has(e.pointerId)) return;
+  const prev = ptrs.get(e.pointerId);
+  const dx = e.clientX - prev.x, dy = e.clientY - prev.y;
+  ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (ptrs.size === 2) {
+    const arr = [...ptrs.values()];
+    const dNow = Math.hypot(arr[0].x - arr[1].x, arr[0].y - arr[1].y);
+    if (pinchD > 0 && dNow > 0) orb.tr = clamp(orb.tr * pinchD / dNow, 9, 46);
+    pinchD = dNow;
+    return;
+  }
+  if (!drag) return;
+  if (Math.abs(e.clientX - drag.x) + Math.abs(e.clientY - drag.y) > 6) drag.moved = true;
+  if (drag.btn === 2 || drag.shift) {
+    const k = 0.0016 * orb.tr;
+    const rx = Math.cos(orb.az), rz = -Math.sin(orb.az);
+    const fx = -Math.sin(orb.az), fz = -Math.cos(orb.az);
+    orb.ttx = clamp(orb.ttx - (dx * rx - dy * fx) * k, -8, 8);
+    orb.ttz = clamp(orb.ttz - (dx * rz - dy * fz) * k, -8, 8);
+  } else {
+    orb.taz -= dx * 0.005;
+    orb.tpol = clamp(orb.tpol - dy * 0.005, 0.22, 1.12);
+  }
+});
+function onPtrEnd(e) {
+  ptrs.delete(e.pointerId); pinchD = 0;
+  if (drag && e.type === 'pointerup' && !drag.moved && performance.now() - drag.t < 450 && drag.btn === 0) {
+    clickPerturb(e.clientX, e.clientY);
+  }
+  drag = null;
+}
+cvs.addEventListener('pointerup', onPtrEnd);
+cvs.addEventListener('pointercancel', onPtrEnd);
+cvs.addEventListener('wheel', e => {
+  e.preventDefault();
+  orb.tr = clamp(orb.tr * Math.exp(e.deltaY * 0.0011), 9, 46);
+}, { passive: false });
+cvs.addEventListener('contextmenu', e => e.preventDefault());
+
+const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+function clickPerturb(cx, cy) {
+  ndc.set(cx / W * 2 - 1, -(cy / H * 2 - 1));
+  ray.setFromCamera(ndc, cam);
+  const hit = ray.intersectObject(terrain)[0];
+  if (hit) perturb(hit.point.x, hit.point.z, 3.4);
+}
+function perturb(x, z, power) {
+  for (let p = 0; p < NP; p++) {
+    const dx = px[p] - x, dz = pz[p] - z, d2 = dx * dx + dz * dz;
+    const imp = power * Math.exp(-d2 / 10.6);
+    if (imp < 0.02) continue;
+    const d = Math.sqrt(d2) + 0.02;
+    vx[p] += dx / d * imp * 2.2 + (Math.random() - 0.5) * imp;
+    vz[p] += dz / d * imp * 2.2 + (Math.random() - 0.5) * imp;
+  }
+  spawnRipple(x, z);
+}
+function pulse() {
+  /* A coherent field-wide impulse from the center. Unlike the local click
+     perturbation, this reaches every particle so the energy threshold for
+     basin retention versus spillover remains immediately demonstrable. */
+  for (let p = 0; p < NP; p++) {
+    const dx = px[p], dz = pz[p], d = Math.hypot(dx, dz) + 0.02;
+    const m = 1.85 + Math.random() * 1.15;
+    vx[p] += dx / d * m + (Math.random() - 0.5) * 0.28;
+    vz[p] += dz / d * m + (Math.random() - 0.5) * 0.28;
+  }
+  spawnRipple(0, 0);
+}
+
+/* ================================================================
+   12 · TWEENS + UI
+   ================================================================ */
+let dirty = true;
+const tweens = [];
+function tw(o, k, to, ms) {
+  for (let i = tweens.length - 1; i >= 0; i--)
+    if (tweens[i].o === o && tweens[i].k === k) tweens.splice(i, 1);
+  tweens.push({ o, k, f: o[k], to, t0: performance.now(), ms });
+}
+function stepTweens(now) {
+  for (let i = tweens.length - 1; i >= 0; i--) {
+    const t = tweens[i];
+    let u = (now - t.t0) / t.ms; if (u >= 1) u = 1;
+    const e = u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
+    t.o[t.k] = t.f + (t.to - t.f) * e;
+    dirty = true;
+    if (u === 1) tweens.splice(i, 1);
+  }
+}
+const tglBtns = {};
+document.querySelectorAll('.tgl').forEach(b => {
+  tglBtns[b.dataset.layer] = b;
+  b.addEventListener('click', () => toggleLayer(b.dataset.layer));
+});
+function toggleLayer(l) {
+  S.on[l] = !S.on[l];
+  tglBtns[l].setAttribute('aria-checked', S.on[l]);
+  tw(S.layers, l, S.on[l] ? 1 : 0, 650);
+}
+let cmpOn = false;
+function toggleCompare() {
+  cmpOn = !cmpOn;
+  tw(S, 'w', cmpOn ? 0 : 1, 1300);
+  const chip = $('cmpState');
+  chip.textContent = cmpOn ? 'Bare continuum' : 'Grammar-constrained';
+  chip.classList.toggle('gram', !cmpOn);
+  const b = $('btnCompare');
+  b.classList.toggle('on', cmpOn); b.setAttribute('aria-pressed', cmpOn);
+}
+$('btnCompare').addEventListener('click', toggleCompare);
+let shadowsOn = true;
+function toggleShadows() {
+  shadowsOn = !shadowsOn;
+  tw(S, 'sun', shadowsOn ? 1 : 0, 700);
+  const b = $('btnShadow');
+  b.classList.toggle('on', shadowsOn); b.setAttribute('aria-pressed', shadowsOn);
+}
+$('btnShadow').addEventListener('click', toggleShadows);
+const qbT = [0, 0, 0, 0];
+document.querySelectorAll('.qbtn').forEach(b => b.addEventListener('click', () => setQuadra(+b.dataset.q)));
+function setQuadra(q) {
+  S.quadra = q;
+  qbT[0] = qbT[1] = qbT[2] = qbT[3] = 0;
+  if (q >= 0) qbT[q] = 1;
+  document.querySelectorAll('.qbtn').forEach(b => b.classList.toggle('on', +b.dataset.q === q));
+}
+function cycleQuadra() { setQuadra(S.quadra >= 3 ? -1 : S.quadra + 1); }
+document.querySelectorAll('.dbtn').forEach(b => b.addEventListener('click', () => setDcnh(b.dataset.d)));
+function setDcnh(d) {
+  S.dcnh = d; Object.assign(DYNT, DCNH[d]);
+  $('dcap').textContent = DCAP[d];
+  document.querySelectorAll('.dbtn').forEach(b => b.classList.toggle('on', b.dataset.d === d));
+}
+$('sK').addEventListener('input', e => { S.kAttr = +e.target.value; $('vK').textContent = '\u00d7' + S.kAttr.toFixed(2); });
+$('sV').addEventListener('input', e => { S.sigma = +e.target.value; $('vV').textContent = S.sigma.toFixed(2); });
+$('sD').addEventListener('input', e => { S.drift = +e.target.value; $('vD').textContent = S.drift.toFixed(2); });
+$('sS').addEventListener('input', e => setStress(+e.target.value));
+function setStress(v) {
+  S.stress = clamp(v, 0, 1);
+  $('sS').value = S.stress; $('vS').textContent = S.stress.toFixed(2);
+  dirty = true;
+}
+$('presel').addEventListener('change', e => { profTgt.set(PRESETS[e.target.value]()); });
+$('papply').addEventListener('click', () => {
+  const raw = $('ptext').value.trim();
+  const nums = raw.split(/[\s,;]+/).filter(x => x.length).map(Number);
+  if (nums.length === 16 && nums.every(n => isFinite(n))) {
+    for (let i = 0; i < 16; i++) profTgt[i] = clamp(nums[i], 0, 1);
+    $('ptext').classList.remove('err');
+  } else {
+    $('ptext').classList.add('err');
+    setTimeout(() => $('ptext').classList.remove('err'), 1200);
+  }
+});
+$('bPulse').addEventListener('click', pulse);
+$('bResetP').addEventListener('click', () => { spawnParticles(); S.trans = 0; });
+$('bResetA').addEventListener('click', resetAll);
+function resetAll() {
+  ['dich', 'axes', 'modelA', 'hybrid', 'higher'].forEach(l => { if (!S.on[l]) toggleLayer(l); });
+  if (cmpOn) toggleCompare();
+  if (!shadowsOn) toggleShadows();
+  S.kAttr = 1; $('sK').value = 1; $('vK').textContent = '\u00d71.00';
+  S.sigma = 0.6; $('sV').value = 0.6; $('vV').textContent = '0.60';
+  S.drift = 0.15; $('sD').value = 0.15; $('vD').textContent = '0.15';
+  setStress(0.15);
+  setDcnh('off');
+  $('presel').value = 'uniform'; profTgt.set(PRESETS.uniform());
+  S.sel = []; syncTeam();
+  setQuadra(-1);
+  S.trans = 0;
+  spawnParticles();
+  resetView();
+  dirty = true;
+}
+document.querySelectorAll('.fold').forEach(b => b.addEventListener('click', () => {
+  const p = b.closest('.panel');
+  const f = p.classList.toggle('folded');
+  b.innerHTML = f ? '+' : '&ndash;';
+}));
+const about = $('about');
+$('btnAbout').addEventListener('click', () => about.classList.add('open'));
+$('aclose').addEventListener('click', () => about.classList.remove('open'));
+about.addEventListener('click', e => { if (e.target === about) about.classList.remove('open'); });
+document.querySelectorAll('.atab').forEach(t => t.addEventListener('click', () => {
+  document.querySelectorAll('.atab').forEach(x => x.classList.toggle('on', x === t));
+  const i = +t.dataset.t;
+  document.querySelectorAll('.apane').forEach((p, j) => p.classList.toggle('on', j === i));
+}));
+
+/* ================================================================
+   13 · EXPORT + KEYBOARD + METRICS
+   ================================================================ */
+const shot = $('shot');
+function shotButton(label, fn, primary) {
+  const b = document.createElement('button');
+  b.className = 'saction' + (primary ? ' primary' : ''); b.textContent = label;
+  b.addEventListener('click', fn); return b;
+}
+function openShot(title, node, hint, actions) {
+  $('shotTitle').textContent = title;
+  const b = $('shotBody'); b.innerHTML = ''; b.appendChild(node);
+  $('shotHint').textContent = hint;
+  const a = $('shotActions'); a.innerHTML = '';
+  (actions || []).forEach(x => a.appendChild(x));
+  shot.classList.add('open');
+}
+$('sclose').addEventListener('click', () => shot.classList.remove('open'));
+shot.addEventListener('click', e => { if (e.target === shot) shot.classList.remove('open'); });
+function flashBtn(id) { const b = $(id); b.classList.remove('flash'); void b.offsetWidth; b.classList.add('flash'); }
+function downloadHref(href, filename, revoke) {
+  const a = document.createElement('a');
+  a.download = filename; a.href = href; a.rel = 'noopener';
+  document.body.appendChild(a); a.click(); a.remove();
+  if (revoke) setTimeout(() => URL.revokeObjectURL(href), 2000);
+}
+async function captureFieldWithLabels() {
+  if (document.fonts && document.fonts.ready) { try { await document.fonts.ready; } catch (e) {} }
+  renderer.render(scene, cam); placeLabels();
+  const src = renderer.domElement, rect = src.getBoundingClientRect();
+  const out = document.createElement('canvas'); out.width = src.width; out.height = src.height;
+  const ctx = out.getContext('2d'); ctx.drawImage(src, 0, 0);
+  const sx = out.width / Math.max(rect.width, 1), sy = out.height / Math.max(rect.height, 1);
+  ctx.save(); ctx.scale(sx, sy);
+  lblEls.forEach((el, i) => {
+    const cs = getComputedStyle(el);
+    if (cs.display === 'none' || +cs.opacity <= 0.02) return;
+    const r = el.getBoundingClientRect(), x = r.left - rect.left, y = r.top - rect.top;
+    const alpha = clamp(+cs.opacity || 1, 0, 1), rad = Math.min(999, r.height / 2);
+    ctx.globalAlpha = alpha;
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(x, y, r.width, r.height, rad);
+    else ctx.rect(x, y, r.width, r.height);
+    ctx.fillStyle = 'rgba(9,14,27,.62)'; ctx.fill();
+    ctx.strokeStyle = el.classList.contains('sel') ? 'rgba(127,212,228,.7)' : 'rgba(232,232,237,.10)';
+    ctx.lineWidth = 1; ctx.stroke();
+    ctx.beginPath(); ctx.arc(x + 15, y + r.height / 2, 5, 0, TAU);
+    ctx.fillStyle = QUADRAS[TYPES[i].q].col; ctx.fill();
+    ctx.fillStyle = 'rgba(232,232,237,.92)';
+    ctx.font = '500 17px ' + getComputedStyle(document.body).fontFamily;
+    ctx.textBaseline = 'middle'; ctx.fillText(TYPES[i].code, x + 28, y + r.height / 2 + 0.5);
+  });
+  ctx.restore();
+  return out.toDataURL('image/png');
+}
+async function exportPNG() {
+  flashBtn('btnPNG');
+  const url = await captureFieldWithLabels();
+  const img = document.createElement('img'); img.src = url; img.alt = 'Attractor landscape snapshot with type labels';
+  openShot('Field snapshot', img,
+    'Review the complete field and its type labels. Nothing downloads until you confirm below.',
+    [shotButton('Download PNG', () => downloadHref(url, 'socion-field.png', false), true)]);
+}
+function exportJSON() {
+  flashBtn('btnJSON');
+  const st = {
+    layers: Object.assign({}, S.on),
+    grammarWeight: +S.w.toFixed(3),
+    comparison: cmpOn,
+    terrainShadows: shadowsOn,
+    dynamics: { attractorStrength: S.kAttr, variability: S.sigma, baselineDrift: S.drift, stress: S.stress },
+    dcnh: S.dcnh,
+    profile: [...profTgt].map(v => +v.toFixed(3)),
+    quadraHighlight: S.quadra >= 0 ? QUADRAS[S.quadra].name : null,
+    team: S.sel.map(i => TYPES[i].code),
+    camera: { azimuth: +orb.taz.toFixed(3), polar: +orb.tpol.toFixed(3), radius: +orb.tr.toFixed(2), targetX: +orb.ttx.toFixed(2), targetZ: +orb.ttz.toFixed(2) },
+  };
+  const txt = JSON.stringify(st, null, 2);
+  const ta = document.createElement('textarea'); ta.readOnly = true; ta.value = txt; ta.rows = 14;
+  const cp = shotButton('Copy JSON', () => {
+    const done = () => { cp.textContent = 'Copied'; setTimeout(() => { cp.textContent = 'Copy JSON'; }, 1400); };
+    const fallback = () => { ta.select(); try { document.execCommand('copy'); } catch (e) {} done(); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(done).catch(fallback);
+    else fallback();
+  }, false);
+  const dl = shotButton('Download JSON', () => {
+    const url = URL.createObjectURL(new Blob([txt], { type: 'application/json' }));
+    downloadHref(url, 'socion-state.json', true);
+  }, true);
+  openShot('Configuration', ta,
+    'Review or copy the current state. Nothing downloads until you confirm below.', [cp, dl]);
+}
+$('btnPNG').addEventListener('click', exportPNG);
+$('btnJSON').addEventListener('click', exportJSON);
+addEventListener('keydown', e => {
+  const tg = e.target.tagName;
+  if (tg === 'INPUT' || tg === 'TEXTAREA' || tg === 'SELECT') return;
+  const k = e.key.toLowerCase();
+  if (k === ' ') { e.preventDefault(); pulse(); }
+  else if (k >= '1' && k <= '5') toggleLayer(['dich', 'axes', 'modelA', 'hybrid', 'higher'][+k - 1]);
+  else if (k === 'c') toggleCompare();
+  else if (k === 'q') cycleQuadra();
+  else if (k === 'e') exportPNG();
+  else if (k === 'j') exportJSON();
+  else if (k === 'r') resetView();
+  else if (k === '[') setStress(S.stress - 0.1);
+  else if (k === ']') setStress(S.stress + 0.1);
+  else if (k === 'escape') { about.classList.remove('open'); shot.classList.remove('open'); }
+});
+function metrics() {
+  let s = 0; const span = Math.max(HMAX - HMIN, 0.001);
+  for (let p = 0; p < NP; p++) s += (ph[p] - HMIN) / span;
+  $('mF').textContent = (s / NP).toFixed(2);
+  $('mT').textContent = S.trans;
+  $('mW').textContent = S.w.toFixed(2);
+}
+function updateOrbs(now, dt) {
+  for (let i = 0; i < 16; i++) {
+    FLASH[i] *= Math.exp(-dt * 3);
+    const s = glowBase[i] * (1 + 0.04 * Math.sin(now * 0.0013 + i * 1.7));
+    orbGlow[i].scale.set(s, s, 1);
+    const cs = 0.68 * (1 + 1.1 * FLASH[i]);
+    orbCore[i].scale.set(cs, cs, 1);
+    orbCore[i].material.opacity = 0.85 + 0.15 * FLASH[i];
+  }
+  for (let q = 0; q < 4; q++)
+    qRings[q].material.opacity = 0.04 + 0.10 * S.layers.higher * S.w + (S.quadra === q ? 0.30 : 0);
+}
+
+/* ================================================================
+   14 · MAIN LOOP + INIT
+   ================================================================ */
+addEventListener('resize', () => {
+  W = innerWidth; H = innerHeight;
+  renderer.setSize(W, H);
+  cam.aspect = W / H; cam.updateProjectionMatrix();
+});
+let last = 0, frame = 0, trailTick = 0;
+function loop(now) {
+  requestAnimationFrame(loop);
+  const dt = Math.min((now - last) / 1000 || 0.016, 1 / 30); last = now;
+  stepTweens(now);
+  let mv = false; const pr = 1 - Math.exp(-dt * 4);
+  for (let i = 0; i < 16; i++) {
+    const d = profTgt[i] - profCur[i];
+    if (Math.abs(d) > 0.001) { profCur[i] += d * pr; mv = true; }
+  }
+  for (const k in DYN) {
+    const d = DYNT[k] - DYN[k];
+    if (Math.abs(d) > 0.001) { DYN[k] += d * pr; mv = true; }
+  }
+  if (mv) dirty = true;
+  const qb = uni.uQB.value, qr = 1 - Math.exp(-dt * 6);
+  qb.x += (qbT[0] - qb.x) * qr; qb.y += (qbT[1] - qb.y) * qr;
+  qb.z += (qbT[2] - qb.z) * qr; qb.w += (qbT[3] - qb.w) * qr;
+  uni.uStress.value = S.stress;
+  uni.uSun.value = S.sun;
+  if (dirty) { combine(); dirty = false; }
+  stepParticles(dt);
+  trailTick++; if (trailTick % 2 === 0) pushTrails();
+  buildTrails();
+  updateRipples(dt);
+  updateOrbs(now, dt);
+  applyCam();
+  uni.uCam.value.copy(cam.position);
+  renderer.render(scene, cam);
+  placeLabels();
+  frame++; if (frame % 12 === 0) metrics();
+}
+function init() {
+  buildLayers();
+  refreshDepths();
+  combine();
+  spawnParticles();
+  syncTeam();
+  last = performance.now();
+  requestAnimationFrame(loop);
+  setTimeout(() => $('veil').classList.add('gone'), 250);
+}
+requestAnimationFrame(() => requestAnimationFrame(init));
+} /* end MAIN */
+</script>
 </body>
 </html>
